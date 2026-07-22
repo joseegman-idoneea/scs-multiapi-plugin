@@ -98,6 +98,7 @@ public class OpenApiGenerator {
   private void processFile(final SpecFile specFile) {
 
     final JsonNode openAPI = OpenApiUtil.getPojoFromSpecFile(baseDir, specFile);
+    OpenApiUtil.solvePathRefs(openAPI, baseDir.resolve(specFile.getFilePath()).getParent().toUri());
     final String clientPackage = specFile.getClientPackage();
 
     if (specFile.isCallMode()) {

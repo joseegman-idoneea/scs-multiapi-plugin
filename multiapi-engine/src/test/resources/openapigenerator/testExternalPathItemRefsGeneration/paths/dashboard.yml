@@ -1,0 +1,18 @@
+---
+# A standalone Path Item Object, referenced from the root contract via
+# `paths: /dashboard: { $ref: './paths/dashboard.yml' }`.
+# Note: the only top-level keys here are HTTP verbs (`get`) - there is NO
+# `$ref` verb, which is why `OpenApiUtil.mapApiGroups` filtering for REST
+# verbs finds nothing when it sees the *reference* node in the root file.
+get:
+  summary: Get the dashboard
+  operationId: getDashboard
+  tags:
+    - dashboard
+  responses:
+    '200':
+      description: The requested dashboard
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Dashboard"
