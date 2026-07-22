@@ -1,0 +1,32 @@
+---
+# Reproduction for: external Path Item $ref produces 0 files silently (issue #372).
+# The `paths` entries are $ref'd out to a separate file (modular contract), exactly
+# like a Redocly/Swagger split contract. openapi 3.1.0 to match the real-world case,
+# but no 3.1-only schema constructs are used so the ONLY blocker under test is the
+# unresolved external Path Item $ref. Schemas are referenced with the already-supported
+# internal component ref style (#/components/schemas/...).
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Dashboard API (modular contract)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: dashboard
+paths:
+  /dashboard:
+    $ref: "./paths/dashboard.yml"
+components:
+  schemas:
+    Dashboard:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        widgetCount:
+          type: integer
+          format: int32
