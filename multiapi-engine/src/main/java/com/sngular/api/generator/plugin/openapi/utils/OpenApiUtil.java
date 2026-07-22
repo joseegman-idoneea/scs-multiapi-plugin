@@ -110,9 +110,30 @@ public class OpenApiUtil {
           ? (ObjectNode) root.get(PATHS)
           : root.putObject(PATHS);
       webhooks.fields().forEachRemaining(webhook -> {
-        final String pathKey = webhook.getKey().startsWith("/") ? webhook.getKey() : "/" + webhook.getKey();
-        if (!paths.has(pathKey)) {
+        final String webhookName = webhook.getKey();
+        final String pathKey = webhookName.startsWith("/") ? webhookName : "/" + webhookName;
+        // A leading-slash-only key would break the by-url grouping (pathUrl.split("/")[1]).
+        if (StringUtils.isNotBlank(StringUtils.strip(webhookName, "/")) && !paths.has(pathKey)) {
+          defaultOperationTags(webhook.getValue(), StringUtils.strip(webhookName, "/"));
           paths.set(pathKey, webhook.getValue());
+        }
+      });
+    }
+  }
+
+  /**
+   * Ensures every operation of a webhook-derived Path Item carries a {@code tags} entry. Webhook
+   * operations normally omit {@code tags}, but the path pipeline requires one; a missing/empty
+   * {@code tags} is defaulted to the webhook name so generation works in both grouping modes.
+   */
+  private static void defaultOperationTags(final JsonNode pathItem, final String defaultTag) {
+    if (pathItem instanceof ObjectNode) {
+      pathItem.fields().forEachRemaining(field -> {
+        if (REST_VERB_SET.contains(field.getKey()) && field.getValue() instanceof ObjectNode) {
+          final ObjectNode operation = (ObjectNode) field.getValue();
+          if (!ApiTool.hasNode(operation, "tags") || !operation.get("tags").isArray() || operation.get("tags").isEmpty()) {
+            operation.putArray("tags").add(defaultTag);
+          }
         }
       });
     }

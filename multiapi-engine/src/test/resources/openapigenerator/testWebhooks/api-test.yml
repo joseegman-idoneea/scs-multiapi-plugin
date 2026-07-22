@@ -18,8 +18,8 @@ webhooks:
     post:
       summary: New pet notification
       operationId: newPetWebhook
-      tags:
-        - webhook
+      # No `tags`: webhook operations normally omit them. The merge defaults the tag
+      # to the webhook name so generation works in the default (by-url) grouping mode.
       requestBody:
         content:
           application/json:

@@ -29,7 +29,7 @@ public interface NewPetApi {
   @Operation(
     operationId = "newPetWebhook",
     summary = "New pet notification",
-    tags = {"webhook"},
+    tags = {"newPet"},
     responses = {
       @ApiResponse(responseCode = "200", description = "Notification acknowledged")
     }
