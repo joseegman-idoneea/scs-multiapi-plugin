@@ -1,0 +1,40 @@
+---
+# Regression for OpenAPI 3.1 top-level `webhooks` support (issue #375).
+# A webhooks-only contract (no `paths`): each webhook is a Path Item Object keyed by
+# name. The generator merges these into the path pipeline so a handler interface and the
+# request payload model are generated.
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Webhooks API (OpenAPI 3.1)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: webhook
+webhooks:
+  newPet:
+    post:
+      summary: New pet notification
+      operationId: newPetWebhook
+      tags:
+        - webhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        '200':
+          description: Notification acknowledged
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string

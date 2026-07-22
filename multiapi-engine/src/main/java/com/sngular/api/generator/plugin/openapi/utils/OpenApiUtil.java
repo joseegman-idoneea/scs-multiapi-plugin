@@ -34,6 +34,8 @@ public class OpenApiUtil {
 
   public static final String PATHS = "paths";
 
+  public static final String WEBHOOKS = "webhooks";
+
   static final Set<String> REST_VERB_SET = Set.of("get", "post", "delete", "patch", "put");
 
   private OpenApiUtil() {
@@ -89,6 +91,31 @@ public class OpenApiUtil {
   public static JsonNode getPojoFromSpecFile(final Path baseDir, final SpecFile specFile) {
 
     return SchemaUtil.getPojoFromRef(baseDir.toUri(), specFile.getFilePath());
+  }
+
+  /**
+   * Merges the OpenAPI 3.1 top-level {@code webhooks} object into {@code paths} so the existing
+   * path pipeline generates a handler interface and the request/response payload models for each
+   * webhook. Each webhook is a Path Item Object keyed by name; it is added under a {@code "/"}-
+   * prefixed key (webhooks have no URL) so the by-url grouping treats the webhook name as the
+   * endpoint. Existing {@code paths} entries take precedence and are never overwritten.
+   *
+   * @param openApi the parsed root contract; its {@code paths} node is created/extended in place.
+   */
+  public static void mergeWebhooksIntoPaths(final JsonNode openApi) {
+    final JsonNode webhooks = openApi.get(WEBHOOKS);
+    if (webhooks instanceof ObjectNode && openApi instanceof ObjectNode) {
+      final ObjectNode root = (ObjectNode) openApi;
+      final ObjectNode paths = root.has(PATHS) && root.get(PATHS).isObject()
+          ? (ObjectNode) root.get(PATHS)
+          : root.putObject(PATHS);
+      webhooks.fields().forEachRemaining(webhook -> {
+        final String pathKey = webhook.getKey().startsWith("/") ? webhook.getKey() : "/" + webhook.getKey();
+        if (!paths.has(pathKey)) {
+          paths.set(pathKey, webhook.getValue());
+        }
+      });
+    }
   }
 
   public static Map<String, JsonNode> processPaths(final JsonNode openApi, final Map<String, JsonNode> schemaMap, SpecFile specFile) {
