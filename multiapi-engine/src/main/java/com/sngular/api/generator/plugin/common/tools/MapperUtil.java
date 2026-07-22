@@ -50,7 +50,7 @@ public class MapperUtil {
 
   private static String processNumber(final JsonNode schema) {
 
-    final var nodeType = schema.get("type").asText();
+    final var nodeType = ApiTool.getType(schema);
     final var formatType = schema.has("format") ? schema.get("format").asText() : null;
     String type = TypeConstants.INTEGER;
     if (TypeConstants.NUMBER.equalsIgnoreCase(nodeType)) {

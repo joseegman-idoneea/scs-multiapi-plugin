@@ -220,7 +220,23 @@ public final class ApiTool {
   }
 
   public static String getType(final JsonNode schema) {
-    return hasType(schema) ? StringUtils.defaultIfEmpty(getNodeAsString(schema, "type"), "") : "";
+    if (!hasType(schema)) {
+      return "";
+    }
+    final JsonNode typeNode = getNode(schema, "type");
+    if (typeNode.isArray()) {
+      // OpenAPI 3.1 / JSON Schema 2020-12: "type" may be an array (e.g. ["string", "null"]).
+      // Resolve to the first non-"null" entry; "null" only marks the type as nullable.
+      String resolvedType = "";
+      for (final JsonNode element : typeNode) {
+        if (!TypeConstants.NULL.equalsIgnoreCase(element.asText())) {
+          resolvedType = element.asText();
+          break;
+        }
+      }
+      return resolvedType;
+    }
+    return StringUtils.defaultIfEmpty(typeNode.textValue(), "");
   }
 
   public static boolean hasItems(final JsonNode schema) {
