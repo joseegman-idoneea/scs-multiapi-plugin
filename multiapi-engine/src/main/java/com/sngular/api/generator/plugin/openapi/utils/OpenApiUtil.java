@@ -6,6 +6,7 @@
 
 package com.sngular.api.generator.plugin.openapi.utils;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -89,6 +90,33 @@ public class OpenApiUtil {
   public static JsonNode getPojoFromSpecFile(final Path baseDir, final SpecFile specFile) {
 
     return SchemaUtil.getPojoFromRef(baseDir.toUri(), specFile.getFilePath());
+  }
+
+  /**
+   * Dereferences Path Item Objects that are declared as a {@code $ref} to another file (modular
+   * contracts). These references are otherwise never resolved, so the affected paths silently
+   * disappear from generation. The referenced Path Item is resolved and set in place, so every
+   * downstream consumer (API grouping, path mapping and model extraction) sees the real operations.
+   *
+   * @param openApi      the parsed root contract; its {@code paths} node is mutated in place.
+   * @param rootFilePath base URI used to resolve relative external references.
+   */
+  public static void solvePathRefs(final JsonNode openApi, final URI rootFilePath) {
+    final JsonNode pathsNode = openApi.get(PATHS);
+    if (pathsNode instanceof ObjectNode) {
+      final ObjectNode paths = (ObjectNode) pathsNode;
+      final Map<String, JsonNode> resolvedItems = new HashMap<>();
+      paths.fields().forEachRemaining(pathItem -> {
+        final JsonNode pathValue = pathItem.getValue();
+        if (ApiTool.hasRef(pathValue)) {
+          final JsonNode resolved = SchemaUtil.solveRef(ApiTool.getRefValue(pathValue), new HashMap<>(), rootFilePath);
+          if (Objects.nonNull(resolved)) {
+            resolvedItems.put(pathItem.getKey(), resolved);
+          }
+        }
+      });
+      resolvedItems.forEach(paths::set);
+    }
   }
 
   public static Map<String, JsonNode> processPaths(final JsonNode openApi, final Map<String, JsonNode> schemaMap, SpecFile specFile) {
