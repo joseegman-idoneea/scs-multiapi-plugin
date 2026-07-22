@@ -1,0 +1,51 @@
+---
+# Edge-case regression for OpenAPI 3.1 webhooks (issue #375): a webhook whose name
+# collides with an existing path. Existing `paths` entries must take precedence, so
+# the `/newPet` GET is generated and the colliding webhook is dropped.
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Webhook/path collision API (OpenAPI 3.1)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: pet
+paths:
+  /newPet:
+    get:
+      summary: Get the latest new pet
+      operationId: getNewPet
+      tags:
+        - pet
+      responses:
+        '200':
+          description: The latest new pet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+webhooks:
+  newPet:
+    post:
+      summary: New pet notification (must be ignored, collides with /newPet)
+      operationId: newPetWebhook
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+      responses:
+        '200':
+          description: Notification acknowledged
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string

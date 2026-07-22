@@ -21,11 +21,13 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.sngular.api.generator.plugin.asyncapi.util.FactoryTypeEnum;
 import com.sngular.api.generator.plugin.common.files.FileLocation;
 import com.sngular.api.generator.plugin.common.model.TypeConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.IteratorUtils;
 import org.apache.commons.collections4.Transformer;
 import org.apache.commons.lang3.StringUtils;
 
+@Slf4j
 public final class ApiTool {
 
   public static final String FORMAT = "format";
@@ -224,19 +226,27 @@ public final class ApiTool {
       return "";
     }
     final JsonNode typeNode = getNode(schema, "type");
-    if (typeNode.isArray()) {
-      // OpenAPI 3.1 / JSON Schema 2020-12: "type" may be an array (e.g. ["string", "null"]).
-      // Resolve to the first non-"null" entry; "null" only marks the type as nullable.
-      String resolvedType = "";
-      for (final JsonNode element : typeNode) {
-        if (!TypeConstants.NULL.equalsIgnoreCase(element.asText())) {
-          resolvedType = element.asText();
-          break;
-        }
+    return typeNode.isArray() ? getArrayType(typeNode) : StringUtils.defaultIfEmpty(typeNode.textValue(), "");
+  }
+
+  private static String getArrayType(final JsonNode typeNode) {
+    // OpenAPI 3.1 / JSON Schema 2020-12: "type" may be an array (e.g. ["string", "null"]).
+    // "null" only marks the type as nullable; keep the concrete (non-"null") types.
+    final List<String> concreteTypes = new ArrayList<>();
+    for (final JsonNode element : typeNode) {
+      if (!TypeConstants.NULL.equalsIgnoreCase(element.asText())) {
+        concreteTypes.add(element.asText());
       }
-      return resolvedType;
     }
-    return StringUtils.defaultIfEmpty(typeNode.textValue(), "");
+    if (concreteTypes.isEmpty()) {
+      // Only "null" (or an empty array): no concrete type to generate, fall back to object.
+      return TypeConstants.OBJECT;
+    }
+    if (concreteTypes.size() > 1) {
+      log.warn("Schema declares a multi-type union {}; only '{}' is generated, the remaining types are ignored.",
+               concreteTypes, concreteTypes.get(0));
+    }
+    return concreteTypes.get(0);
   }
 
   public static boolean hasItems(final JsonNode schema) {
