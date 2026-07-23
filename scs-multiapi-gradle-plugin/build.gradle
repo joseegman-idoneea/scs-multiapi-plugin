@@ -100,7 +100,7 @@ testing {
 
     integrationTest(JvmTestSuite) {
       dependencies {
-        implementation 'com.sngular:scs-multiapi-gradle-plugin:6.3.1'
+        implementation 'com.sngular:scs-multiapi-gradle-plugin:6.4.0'
         implementation 'org.assertj:assertj-core:3.24.2'
       }
 

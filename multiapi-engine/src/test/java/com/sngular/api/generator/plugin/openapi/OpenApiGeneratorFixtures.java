@@ -175,6 +175,13 @@ public final class OpenApiGeneratorFixtures {
 					.clientPackage("com.sngular.multifileplugin.openapi31types.client")
 					.modelNameSuffix("DTO").build());
 
+	static final List<SpecFile> TEST_EXTERNAL_PATH_ITEM_REF_GENERATION = List
+			.of(SpecFile.builder().filePath("openapigenerator/testExternalPathItemRefsGeneration/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.externalpathitemref")
+					.modelPackage("com.sngular.multifileplugin.externalpathitemref.model")
+					.clientPackage("com.sngular.multifileplugin.externalpathitemref.client")
+					.modelNameSuffix("DTO").build());
+
 	static final List<SpecFile> TEST_ANY_OF_IN_RESPONSE = List
 			.of(SpecFile.builder().filePath("openapigenerator/testAnyOfInResponse/api-test.yml")
 					.apiPackage("com.sngular.multifileplugin.testanyofinresponse")
@@ -859,9 +866,27 @@ public final class OpenApiGeneratorFixtures {
 
 		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "ProfileDTO.java");
 
-		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
-				DEFAULT_MODEL_API, Collections.emptyList(), null);
-	}
+    return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+    DEFAULT_MODEL_API, Collections.emptyList(), null);
+  }
+
+  static Function<Path, Boolean> validateExternalPathItemRefGeneration() {
+
+    final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/externalpathitemref";
+
+    final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/externalpathitemref/model";
+
+    final String COMMON_PATH = "openapigenerator/testExternalPathItemRefsGeneration/";
+
+    final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+    final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "DashboardApi.java");
+
+    final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "DashboardDTO.java");
+
+    return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+        DEFAULT_MODEL_API, Collections.emptyList(), null);
+  }
 
 	static Function<Path, Boolean> validateAnyOfInResponse() {
 

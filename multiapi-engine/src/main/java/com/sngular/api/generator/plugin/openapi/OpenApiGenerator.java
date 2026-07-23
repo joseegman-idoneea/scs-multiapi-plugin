@@ -99,6 +99,7 @@ public class OpenApiGenerator {
 
     final JsonNode openAPI = OpenApiUtil.getPojoFromSpecFile(baseDir, specFile);
     OpenApiUtil.mergeWebhooksIntoPaths(openAPI);
+    OpenApiUtil.solvePathRefs(openAPI, baseDir.resolve(specFile.getFilePath()).getParent().toUri());
     final String clientPackage = specFile.getClientPackage();
 
     if (specFile.isCallMode()) {

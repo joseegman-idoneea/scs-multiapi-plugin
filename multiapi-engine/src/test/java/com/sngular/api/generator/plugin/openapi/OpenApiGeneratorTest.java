@@ -91,6 +91,8 @@ class OpenApiGeneratorTest {
             OpenApiGeneratorFixtures.validateOpenApi31Union()),
         Arguments.of("testWebhookPathCollision", OpenApiGeneratorFixtures.TEST_WEBHOOK_PATH_COLLISION,
             OpenApiGeneratorFixtures.validateWebhookPathCollision()),
+        Arguments.of("testExternalPathItemRefsGeneration", OpenApiGeneratorFixtures.TEST_EXTERNAL_PATH_ITEM_REF_GENERATION,
+            OpenApiGeneratorFixtures.validateExternalPathItemRefGeneration()),
         Arguments.of("testAnyOfInResponse", OpenApiGeneratorFixtures.TEST_ANY_OF_IN_RESPONSE,
             OpenApiGeneratorFixtures.validateAnyOfInResponse()),
         Arguments.of("testOneOfInResponse", OpenApiGeneratorFixtures.TEST_ONE_OF_IN_RESPONSE,
