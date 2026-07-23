@@ -6,6 +6,10 @@ on:
 
 concurrency: pr-${{ github.event.pull_request.id }}
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   check-version:
     runs-on: ubuntu-latest
@@ -28,9 +32,10 @@ jobs:
         continue-on-error: true
       - name: Warn about version specification
         if: ${{ steps.engine_version_check.outcome != 'success' || steps.maven_plugin_version_check.outcome != 'success' }}
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3
+        continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           message: Project version has not been updated in pom.xml. Please, update your version using https://semver.org specifications
       - name: Fail
         if: ${{ steps.engine_version_check.outcome != 'success' || steps.maven_plugin_version_check.outcome != 'success' }}
@@ -44,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 21
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4
         with:
           java-version: "21"
           distribution: "adopt"
@@ -76,8 +81,9 @@ jobs:
     steps:
       - name: Warn about missing labels
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') && !contains(github.event.pull_request.labels.*.name, 'documentation') && !contains(github.event.pull_request.labels.*.name, 'maven') && !contains(github.event.pull_request.labels.*.name, 'gradle')}}
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3
+        continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           message: "This pull request hasn't been labeled as `release`, `gradle`, `maven` nor `documentation`. Please ensure this is intentional before merging."
-          comment_tag: label-warn
+          comment-tag: label-warn

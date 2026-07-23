@@ -6,6 +6,10 @@ on:
 
 concurrency: pr-gradle-${{ github.event.pull_request.id }}
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   check-version:
     runs-on: ubuntu-latest
@@ -29,9 +33,10 @@ jobs:
         continue-on-error: true
       - name: Warn about version specification
         if: steps.plugin-version-check.outcome != 'success'
-        uses: thollander/actions-comment-pull-request@v2
+        uses: thollander/actions-comment-pull-request@v3
+        continue-on-error: true
         with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           message: Project version has not been updated in build.gradle. Please, update your version using https://semver.org specifications
       - name: Fail
         if: steps.plugin-version-check.outcome != 'success'
