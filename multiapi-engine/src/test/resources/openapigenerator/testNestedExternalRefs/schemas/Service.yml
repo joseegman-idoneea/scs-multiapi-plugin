@@ -1,0 +1,7 @@
+---
+type: object
+properties:
+  service_id:
+    type: string
+  service_type:
+    $ref: './ServiceType.yml'

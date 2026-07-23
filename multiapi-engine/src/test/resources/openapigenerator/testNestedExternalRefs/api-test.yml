@@ -1,0 +1,23 @@
+---
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Nested External Ref Test
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+paths:
+  /services:
+    get:
+      summary: List all services
+      operationId: listServices
+      tags:
+      - services
+      responses:
+        '200':
+          description: A list of services
+          content:
+            application/json:
+              schema:
+                $ref: "schemas/Service.yml"
