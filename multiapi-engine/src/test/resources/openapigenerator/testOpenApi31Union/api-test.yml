@@ -1,0 +1,40 @@
+---
+# Edge-case regression for OpenAPI 3.1 array-valued `type` (issue #375):
+# a genuine multi-type union (no "null") and a "null"-only type.
+# The generator picks the first concrete type for a union (logging a warning) and
+# falls back to `object` when the array has no concrete type.
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Union types API (OpenAPI 3.1)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: item
+paths:
+  /item:
+    get:
+      summary: Get the item
+      operationId: getItem
+      tags:
+        - item
+      responses:
+        '200':
+          description: The requested item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+components:
+  schemas:
+    Item:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: ["string", "integer"]
+        note:
+          type: ["null"]
