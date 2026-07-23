@@ -44,3 +44,6 @@ pom.xml.bak
 *.bak
 
 scs-multiapi-maven-plugin/dependency-reduced-pom.xml
+
+# Internal analysis documents (not part of the plugin distribution)
+SCS-MULTIAPI-6.3.3-CODEGEN-BLOCKER.md

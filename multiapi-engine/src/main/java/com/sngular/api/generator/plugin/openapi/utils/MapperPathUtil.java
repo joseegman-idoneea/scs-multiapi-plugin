@@ -6,6 +6,7 @@
 
 package com.sngular.api.generator.plugin.openapi.utils;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -223,11 +225,15 @@ public class MapperPathUtil {
                                                                          "InlineObject" + operationIdWithCap, globalObject, baseDir))
                                         .build());
       } else {
-        final var requestBodyNode = globalObject.getRequestBodyNode(MapperUtil.getRefSchemaKey(requestBody)).orElseThrow();
+        final Optional<JsonNode> requestBodyNode = globalObject.getRequestBodyNode(MapperUtil.getRefSchemaKey(requestBody));
+        if (requestBodyNode.isEmpty()) {
+          return requestObjects;
+        }
+        final JsonNode actualRequestBody = requestBodyNode.get();
         requestObjects.add(RequestObject.builder()
                                         .required(ApiTool.hasNode(requestBody, REQUIRED))
-                                        .isFormData(ApiTool.getNode(requestBodyNode, CONTENT).has("multipart/form-data"))
-                                        .contentObjects(mapContentObject(specFile, ApiTool.getNode(requestBodyNode, CONTENT),
+                                        .isFormData(ApiTool.getNode(actualRequestBody, CONTENT).has("multipart/form-data"))
+                                        .contentObjects(mapContentObject(specFile, ApiTool.getNode(actualRequestBody, CONTENT),
                                                                          operationIdWithCap, globalObject, baseDir))
                                         .build());
       }
@@ -242,8 +248,11 @@ public class MapperPathUtil {
     if (Objects.nonNull(parameters) && !parameters.isEmpty()) {
       for (final JsonNode parameter : parameters) {
         if (ApiTool.hasRef(parameter)) {
-          final JsonNode refParameter = globalObject.getParameterNode(MapperUtil.getRefSchemaKey(parameter)).orElseThrow();
-          parameterObjects.add(buildParameterObject(specFile, globalObject, refParameter, baseDir));
+          final Optional<JsonNode> optRefParameter = globalObject.getParameterNode(MapperUtil.getRefSchemaKey(parameter));
+          if (optRefParameter.isEmpty()) {
+            continue;
+          }
+          parameterObjects.add(buildParameterObject(specFile, globalObject, optRefParameter.get(), baseDir));
         } else if (ApiTool.hasNode(parameter, CONTENT)) {
           parameterObjects.addAll(buildParameterContent(contentClassName, parameter, specFile, globalObject, baseDir));
         } else {
@@ -344,7 +353,21 @@ public class MapperPathUtil {
       final JsonNode response) {
     var realResponse = response;
     if (ApiTool.hasRef(response)) {
-      realResponse = globalObject.getResponseNode(MapperUtil.getRefSchemaKey(response)).orElseThrow();
+      final String refValue = ApiTool.getRefValue(response);
+      if (refValue.startsWith("#")) {
+        final Optional<JsonNode> resolvedResponse = globalObject.getResponseNode(MapperUtil.getRefSchemaKey(response));
+        if (resolvedResponse.isEmpty()) {
+          return;
+        }
+        realResponse = resolvedResponse.get();
+      } else {
+        try {
+          final URI baseUri = baseDir.resolve(specFile.getFilePath()).getParent().toUri();
+          realResponse = SchemaUtil.getPojoFromRef(baseUri, refValue);
+        } catch (final Exception e) {
+          return;
+        }
+      }
     }
     final String operationIdWithCap = operationId.substring(0, 1).toUpperCase() + operationId.substring(1);
     final var content = ApiTool.getNode(realResponse, CONTENT);
@@ -427,6 +450,9 @@ public class MapperPathUtil {
     if (refValue.contains("schemas")) {
       refSchema = SchemaUtil.solveRef(refValue, globalObject.getSchemaMap(),
                                       baseDir.resolve(specFile.getFilePath()).getParent().toUri());
+      if (Objects.nonNull(refSchema) && !refValue.contains("#")) {
+        globalObject.getSchemaMap().put(inlinePojoName, refSchema);
+      }
     } else if (refValue.contains("requestBodies")) {
       refSchema = SchemaUtil.solveRef(refValue, globalObject.getRequestBodyMap(),
                                       baseDir.resolve(specFile.getFilePath()).getParent().toUri());

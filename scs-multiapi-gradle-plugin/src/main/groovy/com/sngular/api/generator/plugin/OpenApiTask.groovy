@@ -18,7 +18,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
-@DisableCachingByDefault(because = "Generation depends on external spec files that are not declared as cacheable inputs")
+@DisableCachingByDefault(because = "Generation depends on external spec files not declared as cacheable inputs")
 abstract class OpenApiTask extends DefaultTask {
 
   @Optional

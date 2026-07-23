@@ -9,7 +9,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,16 +36,87 @@ public class SchemaUtil {
       } else {
         final var refValueArr = refValue.split("#");
         final var filePath = refValueArr[0];
+        final URI actualFileBase = resolveActualBaseUri(rootFilePath, filePath);
         solvedRef = getPojoFromRef(rootFilePath, filePath);
         if (ApiTool.hasComponents(solvedRef)) {
           schemaMap.putAll(ApiTool.getComponentSchemas(solvedRef));
-          solvedRef = solvedRef.findValue(MapperUtil.getKey(refValueArr[1]));
+          if (refValueArr.length > 1) {
+            solvedRef = solvedRef.findValue(MapperUtil.getKey(refValueArr[1]));
+          }
+        }
+        if (Objects.nonNull(solvedRef) && Objects.nonNull(actualFileBase)) {
+          resolveNestedFileRefs(solvedRef, actualFileBase);
         }
       }
     } else {
       solvedRef = null;
     }
     return solvedRef;
+  }
+
+  /**
+   * Computes a clean schema-map key from a file-based $ref value.
+   * E.g. "./ServiceType.yml" -> "SCHEMAS/SERVICE_TYPE"
+   */
+  static String computeFileSchemaKey(final String refValue) {
+    try {
+      final String[] parts = refValue.split("/");
+      final String lastRaw = parts[parts.length - 1];
+      String lastName = lastRaw;
+      if (lastName.contains(".")) {
+        lastName = lastName.substring(0, lastName.indexOf('.'));
+      }
+      String category = parts.length >= 2 ? parts[parts.length - 2] : "schemas";
+      if (".".equals(category) || "..".equals(category)) {
+        category = "schemas";
+      }
+      return StringUtils.upperCase(category + "/" + StringCaseUtils.titleToSnakeCase(lastName));
+    } catch (final Exception e) {
+      return null;
+    }
+  }
+
+  private static URI resolveActualBaseUri(final URI rootFilePath, final String filePath) {
+    try {
+      final String cleaned = cleanUpPath(filePath).replace('\\', '/');
+      final Path rootPath = Paths.get(rootFilePath);
+      if (Files.exists(rootPath) && Files.isDirectory(rootPath)) {
+        return rootPath.resolve(cleaned).normalize().getParent().toUri();
+      }
+      final Path parent = rootPath.getParent();
+      if (Objects.nonNull(parent)) {
+        return parent.resolve(cleaned).normalize().getParent().toUri();
+      }
+      return null;
+    } catch (final Exception e) {
+      return null;
+    }
+  }
+
+  private static void resolveNestedFileRefs(final JsonNode node, final URI baseUri) {
+    if (Objects.isNull(node) || !node.isObject()) {
+      return;
+    }
+    final Iterator<Entry<String, JsonNode>> fields = node.fields();
+    while (fields.hasNext()) {
+      final Entry<String, JsonNode> field = fields.next();
+      if (field.getValue().isObject() && field.getValue().has("$ref")) {
+        final String refVal = field.getValue().get("$ref").textValue();
+        if (StringUtils.isNotEmpty(refVal) && !refVal.startsWith("#") && !refVal.startsWith("http")) {
+          try {
+            final URI nestedBase = resolveActualBaseUri(baseUri, refVal);
+            final JsonNode resolved = getPojoFromRef(baseUri, refVal);
+            if (Objects.nonNull(resolved)) {
+              field.setValue(resolved);
+              resolveNestedFileRefs(resolved, nestedBase);
+            }
+          } catch (final Exception ignored) {
+          }
+        }
+      } else {
+        resolveNestedFileRefs(field.getValue(), baseUri);
+      }
+    }
   }
 
   public static JsonNode getPojoFromRef(final URI rootFilePath, final String refPath) {

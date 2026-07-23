@@ -272,7 +272,7 @@ public final class ModelBuilder {
     final SchemaFieldObject field;
     if (ApiTool.hasRef(fieldBody)) {
       final var typeName = MapperUtil.getRefSchemaName(fieldBody, fieldName);
-      final var refSchema = totalSchemas.get(MapperUtil.getRefSchemaKey(fieldBody));
+      var refSchema = totalSchemas.get(MapperUtil.getRefSchemaKey(fieldBody));
       if (!antiLoopList.contains(typeName) && Objects.nonNull(refSchema) && ApiTool.hasType(refSchema)
           && ApiTool.hasItems(refSchema) || ApiTool.getRefValue(fieldBody).contains(fieldName)) {
         if (antiLoopList.contains(typeName) && ApiTool.getRefValue(fieldBody).contains(fieldName)) {
