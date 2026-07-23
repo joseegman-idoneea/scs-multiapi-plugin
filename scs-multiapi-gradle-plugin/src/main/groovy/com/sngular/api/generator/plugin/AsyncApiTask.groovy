@@ -17,7 +17,9 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Generation depends on external spec files that are not declared as cacheable inputs")
 abstract class AsyncApiTask extends DefaultTask {
 
   @Optional
