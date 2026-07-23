@@ -1,0 +1,16 @@
+---
+# Codacy configuration.
+#
+# exclude_paths accepts glob patterns relative to the repository root and removes
+# the matched files from static analysis. We exclude sources that only produce
+# false positives for this project's conventions:
+#
+#   * Gradle task glue classes: thin DefaultTask subclasses. Codacy flags them for
+#     "missing Javadoc", but this project does not use Javadoc, so the warning is
+#     noise rather than a real defect.
+#   * Generated test fixtures under src/test/resources: these are the generator's
+#     expected-output files (not hand-written source) and trip rules such as
+#     line-length that do not apply to generated code.
+exclude_paths:
+  - 'scs-multiapi-gradle-plugin/src/main/groovy/com/sngular/api/generator/plugin/*Task.groovy'
+  - '**/src/test/resources/**'
