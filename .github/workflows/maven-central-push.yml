@@ -23,14 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check if version is updated
-        uses: avides/actions-project-version-check@v1.3
+        uses: avides/actions-project-version-check@v2
         id: engine_version_check
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           file-to-check: multiapi-engine/pom.xml
         continue-on-error: true
       - name: Check if version is updated
-        uses: avides/actions-project-version-check@v1.3
+        uses: avides/actions-project-version-check@v2
         id: maven_plugin_version_check
         with:
           token: ${{ secrets.GITHUB_TOKEN }}

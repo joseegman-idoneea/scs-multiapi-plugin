@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check if engine version is updated
-        uses: avides/actions-project-version-check@v1.3
+        uses: avides/actions-project-version-check@v2
         id: engine-version-check
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -35,11 +35,13 @@ jobs:
           cd scs-multiapi-gradle-plugin
           echo "version=$(gradle properties -q | grep "version:" | awk '{print $2}')" | tee $GITHUB_OUTPUT
       - name: Check if plugin version has been published
-        uses: lakuapik/gh-actions-http-status@v1
         id: plugin-version-check
-        with:
-          sites: '["https://plugins.gradle.org/plugin/com.sngular.scs-multiapi-gradle-plugin/${{ steps.get-version.outputs.version }}"]'
-          expected: '[400]'
+        run: |
+          url="https://plugins.gradle.org/plugin/com.sngular.scs-multiapi-gradle-plugin/${{ steps.get-version.outputs.version }}"
+          status=$(curl -s -o /dev/null -w "%{http_code}" "$url")
+          echo "HTTP status for version ${{ steps.get-version.outputs.version }}: $status"
+          # 400 => version not yet published (OK to release); anything else => already published
+          test "$status" = "400"
 
   build:
     runs-on: ubuntu-latest
