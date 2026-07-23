@@ -1,0 +1,55 @@
+---
+# Regression for OpenAPI 3.1 support: a `$ref` may carry sibling keywords such as
+# `description`. The generator must still resolve the reference regardless of the
+# relative ordering of `$ref` and its siblings (see issue: $ref + description).
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Order API (OpenAPI 3.1)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: order
+paths:
+  /order:
+    get:
+      summary: Get an order
+      operationId: getOrder
+      tags:
+        - order
+      responses:
+        '200':
+          description: The requested order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+        customer:
+          description: The customer that placed the order
+          $ref: "#/components/schemas/Customer"
+        shippingAddress:
+          $ref: "#/components/schemas/Address"
+          description: Where the order is shipped
+    Customer:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+    Address:
+      type: object
+      properties:
+        street:
+          type: string
+        city:
+          type: string
