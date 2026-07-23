@@ -147,12 +147,33 @@ public final class OpenApiGeneratorFixtures {
 					.clientPackage("com.sngular.multifileplugin.externalref.client").modelNamePrefix("Api")
 					.modelNameSuffix("DTO").build());
 
+	static final List<SpecFile> TEST_OPEN_API_31_UNION = List
+			.of(SpecFile.builder().filePath("openapigenerator/testOpenApi31Union/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.openapi31union")
+					.modelPackage("com.sngular.multifileplugin.openapi31union.model")
+					.clientPackage("com.sngular.multifileplugin.openapi31union.client")
+					.modelNameSuffix("DTO").build());
+
+	static final List<SpecFile> TEST_WEBHOOK_PATH_COLLISION = List
+			.of(SpecFile.builder().filePath("openapigenerator/testWebhookPathCollision/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.webhookpathcollision")
+					.modelPackage("com.sngular.multifileplugin.webhookpathcollision.model")
+					.clientPackage("com.sngular.multifileplugin.webhookpathcollision.client")
+					.modelNameSuffix("DTO").build());
+
+	static final List<SpecFile> TEST_WEBHOOKS = List
+			.of(SpecFile.builder().filePath("openapigenerator/testWebhooks/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.webhooks")
+					.modelPackage("com.sngular.multifileplugin.webhooks.model")
+					.clientPackage("com.sngular.multifileplugin.webhooks.client")
+					.modelNameSuffix("DTO").build());
+
 	static final List<SpecFile> TEST_OPEN_API_31_TYPES = List
 			.of(SpecFile.builder().filePath("openapigenerator/testOpenApi31Types/api-test.yml")
 					.apiPackage("com.sngular.multifileplugin.openapi31types")
 					.modelPackage("com.sngular.multifileplugin.openapi31types.model")
 					.clientPackage("com.sngular.multifileplugin.openapi31types.client")
-          .modelNameSuffix("DTO").build());
+					.modelNameSuffix("DTO").build());
 
 	static final List<SpecFile> TEST_EXTERNAL_PATH_ITEM_REF_GENERATION = List
 			.of(SpecFile.builder().filePath("openapigenerator/testExternalPathItemRefsGeneration/api-test.yml")
@@ -791,6 +812,60 @@ public final class OpenApiGeneratorFixtures {
 				DEFAULT_MODEL_API, expectedExceptionFiles, DEFAULT_EXCEPTION_API);
 	}
 
+	static Function<Path, Boolean> validateOpenApi31Union() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/openapi31union";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/openapi31union/model";
+
+		final String COMMON_PATH = "openapigenerator/testOpenApi31Union/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "ItemApi.java");
+
+		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "ItemDTO.java");
+
+		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
+	}
+
+	static Function<Path, Boolean> validateWebhookPathCollision() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/webhookpathcollision";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/webhookpathcollision/model";
+
+		final String COMMON_PATH = "openapigenerator/testWebhookPathCollision/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "NewPetApi.java");
+
+		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "PetDTO.java");
+
+		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
+	}
+
+	static Function<Path, Boolean> validateWebhooks() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/webhooks";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/webhooks/model";
+
+		final String COMMON_PATH = "openapigenerator/testWebhooks/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "NewPetApi.java");
+
+		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "PetDTO.java");
+
+		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
+	}
+
 	static Function<Path, Boolean> validateOpenApi31Types() {
 
 		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/openapi31types";
@@ -807,25 +882,25 @@ public final class OpenApiGeneratorFixtures {
 
     return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
     DEFAULT_MODEL_API, Collections.emptyList(), null);
-	}
-  
-	static Function<Path, Boolean> validateExternalPathItemRefGeneration() {
+  }
 
-		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/externalpathitemref";
+  static Function<Path, Boolean> validateExternalPathItemRefGeneration() {
 
-		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/externalpathitemref/model";
+    final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/externalpathitemref";
 
-		final String COMMON_PATH = "openapigenerator/testExternalPathItemRefsGeneration/";
+    final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/externalpathitemref/model";
 
-		final String ASSETS_PATH = COMMON_PATH + "assets/";
+    final String COMMON_PATH = "openapigenerator/testExternalPathItemRefsGeneration/";
 
-		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "DashboardApi.java");
+    final String ASSETS_PATH = COMMON_PATH + "assets/";
 
-		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "DashboardDTO.java");
+    final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "DashboardApi.java");
 
-		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
-				DEFAULT_MODEL_API, Collections.emptyList(), null);
-	}
+    final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "DashboardDTO.java");
+
+    return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+        DEFAULT_MODEL_API, Collections.emptyList(), null);
+  }
 
 	static Function<Path, Boolean> validateAnyOfInResponse() {
 

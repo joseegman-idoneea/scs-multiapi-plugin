@@ -35,6 +35,8 @@ public class OpenApiUtil {
 
   public static final String PATHS = "paths";
 
+  public static final String WEBHOOKS = "webhooks";
+
   static final Set<String> REST_VERB_SET = Set.of("get", "post", "delete", "patch", "put");
 
   private OpenApiUtil() {
@@ -90,6 +92,52 @@ public class OpenApiUtil {
   public static JsonNode getPojoFromSpecFile(final Path baseDir, final SpecFile specFile) {
 
     return SchemaUtil.getPojoFromRef(baseDir.toUri(), specFile.getFilePath());
+  }
+
+  /**
+   * Merges the OpenAPI 3.1 top-level {@code webhooks} object into {@code paths} so the existing
+   * path pipeline generates a handler interface and the request/response payload models for each
+   * webhook. Each webhook is a Path Item Object keyed by name; it is added under a {@code "/"}-
+   * prefixed key (webhooks have no URL) so the by-url grouping treats the webhook name as the
+   * endpoint. Existing {@code paths} entries take precedence and are never overwritten.
+   *
+   * @param openApi the parsed root contract; its {@code paths} node is created/extended in place.
+   */
+  public static void mergeWebhooksIntoPaths(final JsonNode openApi) {
+    final JsonNode webhooks = openApi.get(WEBHOOKS);
+    if (webhooks instanceof ObjectNode && openApi instanceof ObjectNode) {
+      final ObjectNode root = (ObjectNode) openApi;
+      final ObjectNode paths = root.has(PATHS) && root.get(PATHS).isObject()
+          ? (ObjectNode) root.get(PATHS)
+          : root.putObject(PATHS);
+      webhooks.fields().forEachRemaining(webhook -> {
+        final String webhookName = webhook.getKey();
+        final String pathKey = webhookName.startsWith("/") ? webhookName : "/" + webhookName;
+        // A leading-slash-only key would break the by-url grouping (pathUrl.split("/")[1]).
+        if (StringUtils.isNotBlank(StringUtils.strip(webhookName, "/")) && !paths.has(pathKey)) {
+          defaultOperationTags(webhook.getValue(), StringUtils.strip(webhookName, "/"));
+          paths.set(pathKey, webhook.getValue());
+        }
+      });
+    }
+  }
+
+  /**
+   * Ensures every operation of a webhook-derived Path Item carries a {@code tags} entry. Webhook
+   * operations normally omit {@code tags}, but the path pipeline requires one; a missing/empty
+   * {@code tags} is defaulted to the webhook name so generation works in both grouping modes.
+   */
+  private static void defaultOperationTags(final JsonNode pathItem, final String defaultTag) {
+    if (pathItem instanceof ObjectNode) {
+      pathItem.fields().forEachRemaining(field -> {
+        if (REST_VERB_SET.contains(field.getKey()) && field.getValue() instanceof ObjectNode) {
+          final ObjectNode operation = (ObjectNode) field.getValue();
+          if (!ApiTool.hasNode(operation, "tags") || !operation.get("tags").isArray() || operation.get("tags").isEmpty()) {
+            operation.putArray("tags").add(defaultTag);
+          }
+        }
+      });
+    }
   }
 
   /**
