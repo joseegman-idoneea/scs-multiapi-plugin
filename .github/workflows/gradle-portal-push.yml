@@ -45,6 +45,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check-version, check-pr-labels]
     if: contains(needs.check-version.result, 'success')
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -80,15 +82,15 @@ jobs:
           ./gradlew publishPlugins -Dgradle.publish.key=${{ secrets.GRADLE_PUBLISH_KEY }} -Dgradle.publish.secret=${{ secrets.GRADLE_PUBLISH_SECRET }}
 
       - name: Gradle version
-        uses: thecodemonkey/action-get-gradle-version@master
         id: get-version
-        with:
-          file: scs-multiapi-gradle-plugin/build.gradle
+        run: |
+          version=$(grep -E "^version[[:space:]]*=" scs-multiapi-gradle-plugin/build.gradle | head -1 | sed -E "s/.*['\"]([^'\"]+)['\"].*/\1/")
+          echo "version=$version" | tee -a "$GITHUB_OUTPUT"
 
       - name: Create a Release
-        uses: marvinpinto/action-automatic-releases@latest
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          automatic_release_tag: ${{ steps.get-version.outputs.version }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.get-version.outputs.version }}
           prerelease: false
-          title: "Gradle Release ${{ steps.get-version.outputs.version }}"
+          name: "Gradle Release ${{ steps.get-version.outputs.version }}"
