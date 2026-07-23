@@ -93,7 +93,7 @@ jobs:
           echo "version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" | tee $GITHUB_OUTPUT
 
       - name: Create a Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.get-version.outputs.version }}
