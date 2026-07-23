@@ -29,7 +29,7 @@ jobs:
         continue-on-error: true
       - name: Warn about version specification
         if: steps.plugin-version-check.outcome != 'success'
-        uses: thollander/actions-comment-pull-request@v1
+        uses: thollander/actions-comment-pull-request@v2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           message: Project version has not been updated in build.gradle. Please, update your version using https://semver.org specifications
