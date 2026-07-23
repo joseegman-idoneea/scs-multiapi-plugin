@@ -85,6 +85,8 @@ class OpenApiGeneratorTest {
             OpenApiGeneratorFixtures.validateExternalRefGeneration()),
         Arguments.of("testOpenApi31Types", OpenApiGeneratorFixtures.TEST_OPEN_API_31_TYPES,
             OpenApiGeneratorFixtures.validateOpenApi31Types()),
+        Arguments.of("testRefWithDescription", OpenApiGeneratorFixtures.TEST_REF_WITH_DESCRIPTION,
+            OpenApiGeneratorFixtures.validateRefWithDescription()),
         Arguments.of("testWebhooks", OpenApiGeneratorFixtures.TEST_WEBHOOKS,
             OpenApiGeneratorFixtures.validateWebhooks()),
         Arguments.of("testOpenApi31Union", OpenApiGeneratorFixtures.TEST_OPEN_API_31_UNION,

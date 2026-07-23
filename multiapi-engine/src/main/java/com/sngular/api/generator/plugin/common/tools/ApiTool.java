@@ -262,7 +262,10 @@ public final class ApiTool {
   }
 
   public static boolean hasRef(final JsonNode schema) {
-    return (hasNode(schema, "$ref") || schema.fieldNames().hasNext()) && schema.fieldNames().next().equals("$ref");
+    // OpenAPI 3.1 / JSON Schema 2020-12 allow sibling keywords next to `$ref`
+    // (e.g. `description`), and their ordering is not significant. A node is a
+    // reference whenever it declares a top-level `$ref`, regardless of position.
+    return hasNode(schema, "$ref");
   }
 
   public static boolean hasProperties(final JsonNode schema) {
