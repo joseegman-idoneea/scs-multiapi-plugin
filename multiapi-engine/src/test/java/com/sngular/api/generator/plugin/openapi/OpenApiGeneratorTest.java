@@ -83,6 +83,8 @@ class OpenApiGeneratorTest {
             OpenApiGeneratorFixtures.validateEnumsLombokGeneration()),
         Arguments.of("testExternalRefsGeneration", OpenApiGeneratorFixtures.TEST_EXTERNAL_REF_GENERATION,
             OpenApiGeneratorFixtures.validateExternalRefGeneration()),
+        Arguments.of("testOpenApi31Types", OpenApiGeneratorFixtures.TEST_OPEN_API_31_TYPES,
+            OpenApiGeneratorFixtures.validateOpenApi31Types()),
         Arguments.of("testExternalPathItemRefsGeneration", OpenApiGeneratorFixtures.TEST_EXTERNAL_PATH_ITEM_REF_GENERATION,
             OpenApiGeneratorFixtures.validateExternalPathItemRefGeneration()),
         Arguments.of("testAnyOfInResponse", OpenApiGeneratorFixtures.TEST_ANY_OF_IN_RESPONSE,

@@ -18,6 +18,8 @@ public final class TypeConstants {
 
   public static final String ARRAY = "array";
 
+  public static final String NULL = "null";
+
   public static final String MAP = "map";
 
   public static final String BIG_DECIMAL = "bigDecimal";

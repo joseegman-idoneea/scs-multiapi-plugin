@@ -1,0 +1,49 @@
+---
+# Reproduction/regression for OpenAPI 3.1.x support (issue #375).
+# Exercises JSON Schema 2020-12 array-valued `type`, including the ["<type>", "null"]
+# nullable idiom that replaces 3.0's `nullable: true`, plus a int64 and a plain array.
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Profile API (OpenAPI 3.1)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: profile
+paths:
+  /profile:
+    get:
+      summary: Get the profile
+      operationId: getProfile
+      tags:
+        - profile
+      responses:
+        '200':
+          description: The requested profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+components:
+  schemas:
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+        nickname:
+          type: ["string", "null"]
+        age:
+          type: ["integer", "null"]
+        score:
+          type: ["number", "null"]
+          format: double
+        loginCount:
+          type: integer
+          format: int64
+        tags:
+          type: array
+          items:
+            type: string
