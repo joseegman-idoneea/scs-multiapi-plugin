@@ -175,6 +175,13 @@ public final class OpenApiGeneratorFixtures {
 					.clientPackage("com.sngular.multifileplugin.openapi31types.client")
 					.modelNameSuffix("DTO").build());
 
+	static final List<SpecFile> TEST_REF_WITH_DESCRIPTION = List
+			.of(SpecFile.builder().filePath("openapigenerator/testRefWithDescription/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.refwithdescription")
+					.modelPackage("com.sngular.multifileplugin.refwithdescription.model")
+					.clientPackage("com.sngular.multifileplugin.refwithdescription.client")
+					.modelNameSuffix("DTO").build());
+
 	static final List<SpecFile> TEST_EXTERNAL_PATH_ITEM_REF_GENERATION = List
 			.of(SpecFile.builder().filePath("openapigenerator/testExternalPathItemRefsGeneration/api-test.yml")
 					.apiPackage("com.sngular.multifileplugin.externalpathitemref")
@@ -883,6 +890,25 @@ public final class OpenApiGeneratorFixtures {
     return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
     DEFAULT_MODEL_API, Collections.emptyList(), null);
   }
+
+	static Function<Path, Boolean> validateRefWithDescription() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/refwithdescription";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/refwithdescription/model";
+
+		final String COMMON_PATH = "openapigenerator/testRefWithDescription/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "OrderApi.java");
+
+		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "AddressDTO.java",
+				ASSETS_PATH + "CustomerDTO.java", ASSETS_PATH + "OrderDTO.java");
+
+		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
+	}
 
   static Function<Path, Boolean> validateExternalPathItemRefGeneration() {
 
