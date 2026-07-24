@@ -28,4 +28,8 @@ public class SchemaFieldObject {
   private Map<String, String> enumValues;
 
   private Object constValue;
+
+  private String description;
+
+  private String example;
 }

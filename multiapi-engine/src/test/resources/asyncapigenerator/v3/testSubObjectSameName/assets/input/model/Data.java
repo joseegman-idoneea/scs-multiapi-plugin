@@ -38,7 +38,7 @@ public class Data {
     }
   }
 
-  @Schema(name = "commitId", required = false)
+  @Schema(name = "commitId", required = false, example = "toto")
   public String getCommitId() {
     return commitId;
   }

@@ -64,7 +64,7 @@ public class OrderDTO {
     this.id = id;
   }
 
-  @Schema(name = "customer", required = false)
+  @Schema(name = "customer", required = false, description = "The customer that placed the order")
   public CustomerDTO getCustomer() {
     return customer;
   }
@@ -72,7 +72,7 @@ public class OrderDTO {
     this.customer = customer;
   }
 
-  @Schema(name = "shippingAddress", required = false)
+  @Schema(name = "shippingAddress", required = false, description = "Where the order is shipped")
   public AddressDTO getShippingAddress() {
     return shippingAddress;
   }

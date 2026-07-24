@@ -76,7 +76,7 @@ public class StatusMsgDTO {
     this.status = status;
   }
 
-  @Schema(name = "clientId", required = false)
+  @Schema(name = "clientId", required = false, description = "Id del cliente.")
   public Integer getClientId() {
     return clientId;
   }

@@ -47,7 +47,7 @@ public class Data {
     }
   }
 
-  @Schema(name = "name", required = false)
+  @Schema(name = "name", required = false, example = "hugues")
   public String getName() {
     return name;
   }
@@ -55,7 +55,7 @@ public class Data {
     this.name = name;
   }
 
-  @Schema(name = "tenantId", required = false)
+  @Schema(name = "tenantId", required = false, example = "tenant1")
   public String getTenantId() {
     return tenantId;
   }

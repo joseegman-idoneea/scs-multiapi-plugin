@@ -42,6 +42,8 @@ public final class ApiTool {
 
   public static final String SCHEMAS = "schemas";
 
+  public static final String DEFS = "$defs";
+
   public static final String REQUIRED = "required";
 
   public static final String PARAMETERS = "parameters";
@@ -153,7 +155,21 @@ public final class ApiTool {
   }
 
   public static Map<String, JsonNode> getComponentSchemas(final JsonNode openApi) {
-    return getComponentSchemasByType(openApi, SCHEMAS);
+    final var schemasMap = getComponentSchemasByType(openApi, SCHEMAS);
+    // JSON Schema 2020-12 / OpenAPI 3.1: reusable schemas may live under a
+    // top-level `$defs` object instead of `components/schemas`.
+    schemasMap.putAll(getDefsSchemas(openApi));
+    return schemasMap;
+  }
+
+  private static Map<String, JsonNode> getDefsSchemas(final JsonNode openApi) {
+    final var schemasMap = new HashMap<String, JsonNode>();
+    if (hasNode(openApi, DEFS)) {
+      final var defs = getNode(openApi, DEFS);
+      defs.fieldNames().forEachRemaining(name -> schemasMap.put(
+          DEFS.toUpperCase() + "/" + StringCaseUtils.titleToSnakeCase(name), getNode(defs, name)));
+    }
+    return schemasMap;
   }
 
   private static Map<String, JsonNode> getComponentSchemasByType(final JsonNode openApi, final String schemaType) {
@@ -226,7 +242,15 @@ public final class ApiTool {
       return "";
     }
     final JsonNode typeNode = getNode(schema, "type");
-    return typeNode.isArray() ? getArrayType(typeNode) : StringUtils.defaultIfEmpty(typeNode.textValue(), "");
+    if (typeNode.isArray()) {
+      return getArrayType(typeNode);
+    }
+    // OpenAPI 3.1 / JSON Schema 2020-12: a scalar `type: "null"` carries no concrete
+    // Java type; degrade to object so we never emit an invalid `null` type.
+    if (TypeConstants.NULL.equalsIgnoreCase(typeNode.textValue())) {
+      return TypeConstants.OBJECT;
+    }
+    return StringUtils.defaultIfEmpty(typeNode.textValue(), "");
   }
 
   private static String getArrayType(final JsonNode typeNode) {
@@ -347,15 +371,57 @@ public final class ApiTool {
   public static boolean isBinary(final JsonNode schema) {
     final boolean isMultipartFile;
     if (hasType(schema) && TypeConstants.STRING.equalsIgnoreCase(getType(schema))) {
-      if (hasNode(schema, FORMAT)) {
-        isMultipartFile = "binary".equalsIgnoreCase(getNode(schema, FORMAT).textValue());
+      if (hasNode(schema, FORMAT) && "binary".equalsIgnoreCase(getNode(schema, FORMAT).textValue())) {
+        isMultipartFile = true;
       } else {
-        isMultipartFile = false;
+        // OpenAPI 3.1 / JSON Schema 2020-12 replace `format: binary` with the
+        // `contentEncoding` / `contentMediaType` keywords for binary payloads.
+        isMultipartFile = hasNode(schema, "contentEncoding") || hasNode(schema, "contentMediaType");
       }
     } else {
       isMultipartFile = false;
     }
     return isMultipartFile;
+  }
+
+  public static boolean isNullable(final JsonNode schema) {
+    if (Objects.isNull(schema)) {
+      return false;
+    }
+    // OpenAPI 3.0 `nullable: true`.
+    if (getNodeAsBoolean(schema, "nullable")) {
+      return true;
+    }
+    // OpenAPI 3.1 idiom: `type: ["<type>", "null"]`.
+    if (hasType(schema)) {
+      final JsonNode typeNode = getNode(schema, "type");
+      if (typeNode.isArray()) {
+        for (final JsonNode element : typeNode) {
+          if (TypeConstants.NULL.equalsIgnoreCase(element.asText())) {
+            return true;
+          }
+        }
+      } else {
+        return TypeConstants.NULL.equalsIgnoreCase(typeNode.textValue());
+      }
+    }
+    return false;
+  }
+
+  public static boolean hasPatternProperties(final JsonNode schema) {
+    return hasNode(schema, "patternProperties");
+  }
+
+  public static JsonNode getPatternProperties(final JsonNode schema) {
+    return getNode(schema, "patternProperties");
+  }
+
+  public static boolean hasPrefixItems(final JsonNode schema) {
+    return hasNode(schema, "prefixItems");
+  }
+
+  public static JsonNode getPrefixItems(final JsonNode schema) {
+    return getNode(schema, "prefixItems");
   }
 
   public static List<JsonNode> findContentSchemas(final JsonNode schema) {
@@ -412,6 +478,32 @@ public final class ApiTool {
       om = new ObjectMapper();
     }
     return om.readTree(file);
+  }
+
+  public static String getDescription(final JsonNode schema) {
+    return getNodeAsString(schema, "description");
+  }
+
+  public static String getExample(final JsonNode schema) {
+    // OpenAPI 3.0 uses a single `example`; OpenAPI 3.1 / JSON Schema 2020-12 use an
+    // `examples` array. Prefer `example`, otherwise take the first `examples` entry.
+    if (hasNode(schema, "example")) {
+      return asExampleText(getNode(schema, "example"));
+    }
+    if (hasNode(schema, "examples")) {
+      final JsonNode examples = getNode(schema, "examples");
+      if (examples.isArray() && examples.elements().hasNext()) {
+        return asExampleText(examples.elements().next());
+      }
+    }
+    return null;
+  }
+
+  private static String asExampleText(final JsonNode example) {
+    if (Objects.isNull(example) || example.isNull()) {
+      return null;
+    }
+    return example.isValueNode() ? example.asText() : example.toString();
   }
 
   public static boolean hasConst(final JsonNode fieldBody) {

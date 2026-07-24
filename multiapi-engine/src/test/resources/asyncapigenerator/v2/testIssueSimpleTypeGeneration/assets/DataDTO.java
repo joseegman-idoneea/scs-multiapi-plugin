@@ -56,7 +56,7 @@ public class DataDTO {
     }
   }
 
-  @Schema(name = "clientName", required = false)
+  @Schema(name = "clientName", required = false, description = "Nombre del cliente.")
   public String getClientName() {
     return clientName;
   }
@@ -64,7 +64,7 @@ public class DataDTO {
     this.clientName = clientName;
   }
 
-  @Schema(name = "flightNumber", required = false)
+  @Schema(name = "flightNumber", required = false, description = "Número de vuelo.")
   public String getFlightNumber() {
     return flightNumber;
   }
