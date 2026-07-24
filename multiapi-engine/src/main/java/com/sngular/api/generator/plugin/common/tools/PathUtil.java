@@ -48,6 +48,28 @@ public final class PathUtil {
    */
   public static boolean isRemoteUri(final String filePath) {
     return StringUtils.isNotEmpty(filePath)
-           && filePath.matches("^(?i)(https?|ftp|file)://.*");
+           && filePath.matches("^(?i)(https?|file)://.*");
+  }
+
+  /** Connection timeout (ms) applied when fetching a remote specification. */
+  public static final int REMOTE_CONNECT_TIMEOUT_MS = 15_000;
+
+  /** Read timeout (ms) applied when fetching a remote specification. */
+  public static final int REMOTE_READ_TIMEOUT_MS = 30_000;
+
+  /**
+   * Opens a stream to a URL with bounded connect/read timeouts, so an unresponsive remote
+   * spec server (e.g. an Apicurio Registry) cannot hang the build indefinitely. Timeouts are
+   * harmless for non-network schemes such as {@code file:} and {@code jar:}.
+   *
+   * @param url the URL to open
+   * @return the input stream
+   * @throws java.io.IOException if the connection cannot be established or times out
+   */
+  public static java.io.InputStream openUrlStream(final java.net.URL url) throws java.io.IOException {
+    final java.net.URLConnection connection = url.openConnection();
+    connection.setConnectTimeout(REMOTE_CONNECT_TIMEOUT_MS);
+    connection.setReadTimeout(REMOTE_READ_TIMEOUT_MS);
+    return connection.getInputStream();
   }
 }

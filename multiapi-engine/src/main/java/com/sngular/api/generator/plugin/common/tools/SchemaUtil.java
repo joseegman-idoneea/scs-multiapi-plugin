@@ -172,7 +172,7 @@ public class SchemaUtil {
 
   private static String readFromUrl(final URL fileURL) {
     final var sb = new StringBuilder();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileURL.openStream()))) {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(PathUtil.openUrlStream(fileURL)))) {
       String inputLine;
       while ((inputLine = reader.readLine()) != null) {
         sb.append(inputLine).append(System.lineSeparator());

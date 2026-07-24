@@ -837,9 +837,10 @@ from a local JAR containing `contracts/event-api.yml` in its resources:
 
 ## Loading specifications from a remote URL (Apicurio Registry, HTTP)
 
-`filePath` also accepts a remote URL (`http`, `https`, `ftp` or `file` scheme). When it does,
+`filePath` also accepts a remote URL (`http`, `https` or `file` scheme). When it does,
 the specification is downloaded at generation time instead of being read from the filesystem or
-the classpath. This works for both OpenAPI and AsyncAPI specs.
+the classpath. This works for both OpenAPI and AsyncAPI specs. Remote fetches use bounded
+connect/read timeouts so an unresponsive server cannot hang the build.
 
 This is the mechanism to consume a spec published in an **Apicurio Registry**, whose artifacts are
 served over HTTP. Point `filePath` at the artifact's content endpoint, for example:
@@ -862,3 +863,6 @@ Notes:
 - Only publicly reachable URLs are supported for now; authenticated registries (tokens/headers)
   are not yet handled.
 - External `$ref`s are resolved relative to the spec's URL when the spec itself is remote.
+- For an `https` registry using an internally-issued/self-signed certificate, the certificate
+  must be trusted by the JVM running the build (e.g. imported into its truststore); certificate
+  validation is not disabled.

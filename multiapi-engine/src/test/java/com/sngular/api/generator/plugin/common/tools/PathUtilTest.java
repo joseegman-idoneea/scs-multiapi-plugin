@@ -18,12 +18,12 @@ class PathUtilTest {
     assertTrue(PathUtil.isRemoteUri("http://registry/apis/registry/v2/groups/g/artifacts/a"));
     assertTrue(PathUtil.isRemoteUri("https://example.com/openapi.yml"));
     assertTrue(PathUtil.isRemoteUri("HTTPS://EXAMPLE.COM/openapi.yml"));
-    assertTrue(PathUtil.isRemoteUri("ftp://host/spec.yml"));
     assertTrue(PathUtil.isRemoteUri("file:///tmp/spec.yml"));
   }
 
   @Test
   void isRemoteUriRejectsLocalPaths() {
+    assertFalse(PathUtil.isRemoteUri("ftp://host/spec.yml"));
     assertFalse(PathUtil.isRemoteUri("./src/main/resources/api/api.yml"));
     assertFalse(PathUtil.isRemoteUri("/absolute/path/api.yml"));
     assertFalse(PathUtil.isRemoteUri("contracts/event-api.yml"));

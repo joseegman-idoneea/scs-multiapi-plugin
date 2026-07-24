@@ -11,6 +11,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 
+import com.sngular.api.generator.plugin.common.tools.PathUtil;
+
 /**
  * {@link FileLocation} for specifications loaded from a remote URL (e.g. an Apicurio Registry
  * artifact served over HTTP). Relative sibling files (external {@code $ref}s) are resolved
@@ -27,7 +29,7 @@ public class RemoteFileLocation implements FileLocation {
   @Override
   public InputStream getFileAtLocation(final String filename) throws IOException {
     final URL target = baseUri.resolve(filename).toURL();
-    return target.openStream();
+    return PathUtil.openUrlStream(target);
   }
 
   @Override

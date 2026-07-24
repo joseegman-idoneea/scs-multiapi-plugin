@@ -455,7 +455,7 @@ public final class ApiTool {
     final InputStream file;
     // Remote references (http/https/ftp/file URLs) are fetched directly from their URL.
     if (PathUtil.isRemoteUri(filePath)) {
-      file = new java.net.URL(filePath).openStream();
+      file = PathUtil.openUrlStream(new java.net.URL(filePath));
     } else if (PathUtil.isAbsolutePath(filePath)) {
       // For absolute paths, open directly
       file = new FileInputStream(filePath);
