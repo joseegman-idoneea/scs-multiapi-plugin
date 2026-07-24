@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
@@ -16,6 +17,28 @@ import java.util.HashMap;
 @JsonDeserialize(builder = GadgetDTO.GadgetDTOBuilder.class)
 public class GadgetDTO {
 
+  @JsonProperty(value ="status")
+  private Status status;
+  public enum Status {
+    ACTIVE("ACTIVE"),
+    RETIRED("RETIRED");
+
+    private String value;
+
+    Status(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
+    }
+  }
   @JsonProperty(value ="payload")
   private MultipartFile payload;
   @JsonProperty(value ="nothing")
@@ -32,6 +55,7 @@ public class GadgetDTO {
   private String serial;
 
   private GadgetDTO(GadgetDTOBuilder builder) {
+    this.status = builder.status;
     this.payload = builder.payload;
     this.nothing = builder.nothing;
     this.id = builder.id;
@@ -49,6 +73,7 @@ public class GadgetDTO {
   @JsonPOJOBuilder(buildMethodName = "build", withPrefix = "")
   public static class GadgetDTOBuilder {
 
+    private Status status;
     private MultipartFile payload;
     private Object nothing;
     private String id;
@@ -56,6 +81,11 @@ public class GadgetDTO {
     private List<BigDecimal> coords = new ArrayList<BigDecimal>();
     private PersonDTO owner;
     private String serial;
+
+    public GadgetDTO.GadgetDTOBuilder status(Status status) {
+      this.status = status;
+      return this;
+    }
 
     public GadgetDTO.GadgetDTOBuilder payload(MultipartFile payload) {
       this.payload = payload;
@@ -110,6 +140,14 @@ public class GadgetDTO {
       GadgetDTO gadgetDTO = new GadgetDTO(this);
       return gadgetDTO;
     }
+  }
+
+  @Schema(name = "status", required = false, description = "Lifecycle status of the gadget")
+  public Status getStatus() {
+    return status;
+  }
+  public void setStatus(Status status) {
+    this.status = status;
   }
 
   @Schema(name = "payload", required = false)
@@ -177,18 +215,19 @@ public class GadgetDTO {
       return false;
     }
     GadgetDTO gadgetDTO = (GadgetDTO) o;
-    return Objects.equals(this.payload, gadgetDTO.payload) && Objects.equals(this.nothing, gadgetDTO.nothing) && Objects.equals(this.id, gadgetDTO.id) && Objects.equals(this.metadata, gadgetDTO.metadata) && Objects.equals(this.coords, gadgetDTO.coords) && Objects.equals(this.owner, gadgetDTO.owner) && Objects.equals(this.serial, gadgetDTO.serial);
+    return Objects.equals(this.status, gadgetDTO.status) && Objects.equals(this.payload, gadgetDTO.payload) && Objects.equals(this.nothing, gadgetDTO.nothing) && Objects.equals(this.id, gadgetDTO.id) && Objects.equals(this.metadata, gadgetDTO.metadata) && Objects.equals(this.coords, gadgetDTO.coords) && Objects.equals(this.owner, gadgetDTO.owner) && Objects.equals(this.serial, gadgetDTO.serial);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(payload, nothing, id, metadata, coords, owner, serial);
+    return Objects.hash(status, payload, nothing, id, metadata, coords, owner, serial);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("GadgetDTO{");
+    sb.append(" status:").append(status).append(",");
     sb.append(" payload:").append(payload).append(",");
     sb.append(" nothing:").append(nothing).append(",");
     sb.append(" id:").append(id).append(",");

@@ -58,6 +58,12 @@ components:
           patternProperties:
             "^x-":
               type: string
+        status:
+          type: string
+          description: Lifecycle status of the gadget
+          enum:
+            - ACTIVE
+            - RETIRED
         nothing:
           type: "null"
         owner:

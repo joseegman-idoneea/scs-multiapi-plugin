@@ -872,6 +872,10 @@ public final class ModelBuilder {
       throw new BadDefinedEnumException(name);
     }
     field.setEnumValues(enumValuesMap);
+    // Enum fields bypass processObjectProperty's applyMetadata, so carry the schema's
+    // description/example here too for consistent @Schema annotations.
+    field.setDescription(ApiTool.getDescription(value));
+    field.setExample(ApiTool.getExample(value));
     return field;
   }
 
