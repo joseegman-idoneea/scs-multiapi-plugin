@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.ArrayList;
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -24,7 +25,7 @@ public class GadgetDTO {
   @JsonProperty(value ="metadata")
   private Map<String, String> metadata;
   @JsonProperty(value ="coords")
-  private List<Object> coords;
+  private List<BigDecimal> coords;
   @JsonProperty(value ="owner")
   private PersonDTO owner;
   @JsonProperty(value ="serial")
@@ -52,7 +53,7 @@ public class GadgetDTO {
     private Object nothing;
     private String id;
     private Map<String, String> metadata = new HashMap<String, String>();
-    private List<Object> coords = new ArrayList<Object>();
+    private List<BigDecimal> coords = new ArrayList<BigDecimal>();
     private PersonDTO owner;
     private String serial;
 
@@ -81,14 +82,14 @@ public class GadgetDTO {
       return this;
     }
 
-    public GadgetDTO.GadgetDTOBuilder coords(List<Object> coords) {
+    public GadgetDTO.GadgetDTOBuilder coords(List<BigDecimal> coords) {
       if (!coords.isEmpty()) {
         this.coords.addAll(coords);
       }
       return this;
     }
 
-    public GadgetDTO.GadgetDTOBuilder coord(Object coord) {
+    public GadgetDTO.GadgetDTOBuilder coord(BigDecimal coord) {
       if (Objects.nonNull(coord)) {
         this.coords.add(coord);
       }
@@ -144,10 +145,10 @@ public class GadgetDTO {
   }
 
   @Schema(name = "coords", required = false)
-  public List<Object> getCoords() {
+  public List<BigDecimal> getCoords() {
     return coords;
   }
-  public void setCoords(List<Object> coords) {
+  public void setCoords(List<BigDecimal> coords) {
     this.coords = coords;
   }
 

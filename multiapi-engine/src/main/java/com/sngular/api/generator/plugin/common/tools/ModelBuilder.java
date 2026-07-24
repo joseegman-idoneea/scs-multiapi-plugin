@@ -448,15 +448,15 @@ public final class ModelBuilder {
     final List<SchemaFieldObject> fieldObjectArrayList = new LinkedList<>();
 
     if (!ApiTool.hasItems(schema) || ApiTool.getItems(schema).isBoolean()) {
-      // No `items` schema, or `items: false` (JSON Schema 2020-12). If the array
-      // declares positional `prefixItems` (tuple), or nothing typable at all, the
-      // element type degrades to Object -> List<Object>.
+      // No `items` schema, or `items: false` (JSON Schema 2020-12). A `prefixItems`
+      // tuple becomes a List of its common element type when every position shares one
+      // type, otherwise (mixed types, or nothing typable) the element type is Object.
       final boolean isTuple = ApiTool.hasPrefixItems(schema);
       fieldObjectArrayList.add(SchemaFieldObject
                                    .builder()
                                    .baseName(fieldName)
                                    .dataType(isTuple
-                                                 ? SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, TypeConstants.OBJECT)
+                                                 ? SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, uniformPrefixItemType(schema, specFile))
                                                  : new SchemaFieldObjectType(TypeConstants.OBJECT))
                                    .build());
     } else {
@@ -922,8 +922,35 @@ public final class ModelBuilder {
     if (Objects.nonNull(items) && !items.isBoolean()) {
       return ApiTool.hasRef(items) ? MapperUtil.getPojoNameFromRef(items, specFile, null) : ApiTool.getType(items);
     }
-    // `prefixItems` (tuple) or `items: false` -> degrade the element type to Object.
-    return TypeConstants.OBJECT;
+    // `prefixItems` (tuple): common element type if uniform, else Object. `items: false` -> Object.
+    return uniformPrefixItemType(schema, specFile);
+  }
+
+  private static String uniformPrefixItemType(final JsonNode schema, final CommonSpecFile specFile) {
+    if (!ApiTool.hasPrefixItems(schema)) {
+      return TypeConstants.OBJECT;
+    }
+    final JsonNode prefixItems = ApiTool.getPrefixItems(schema);
+    if (Objects.isNull(prefixItems) || !prefixItems.isArray() || !prefixItems.elements().hasNext()) {
+      return TypeConstants.OBJECT;
+    }
+    String common = null;
+    for (final JsonNode item : prefixItems) {
+      final String type;
+      if (ApiTool.hasRef(item)) {
+        type = MapperUtil.getPojoNameFromRef(item, specFile, null);
+      } else if (ApiTool.hasType(item)) {
+        type = MapperUtil.getSimpleType(item, specFile);
+      } else {
+        return TypeConstants.OBJECT;
+      }
+      if (Objects.isNull(common)) {
+        common = type;
+      } else if (!common.equals(type)) {
+        return TypeConstants.OBJECT;
+      }
+    }
+    return Objects.isNull(common) ? TypeConstants.OBJECT : common;
   }
 
   private static SchemaFieldObject buildPatternPropertiesField(
