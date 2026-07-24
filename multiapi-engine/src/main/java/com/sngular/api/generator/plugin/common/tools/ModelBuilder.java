@@ -346,7 +346,8 @@ public final class ModelBuilder {
   private static void applyMetadata(final List<SchemaFieldObject> fields, final String fieldName, final JsonNode fieldBody) {
     final String description = ApiTool.getDescription(fieldBody);
     final String example = ApiTool.getExample(fieldBody);
-    if (Objects.isNull(description) && Objects.isNull(example)) {
+    final boolean deprecated = ApiTool.isDeprecated(fieldBody);
+    if (Objects.isNull(description) && Objects.isNull(example) && !deprecated) {
       return;
     }
     for (final var field : fields) {
@@ -356,6 +357,9 @@ public final class ModelBuilder {
         }
         if (Objects.nonNull(example)) {
           field.setExample(example);
+        }
+        if (deprecated) {
+          field.setDeprecated(true);
         }
       }
     }
@@ -873,9 +877,10 @@ public final class ModelBuilder {
     }
     field.setEnumValues(enumValuesMap);
     // Enum fields bypass processObjectProperty's applyMetadata, so carry the schema's
-    // description/example here too for consistent @Schema annotations.
+    // description/example/deprecated here too for consistent @Schema annotations.
     field.setDescription(ApiTool.getDescription(value));
     field.setExample(ApiTool.getExample(value));
+    field.setDeprecated(ApiTool.isDeprecated(value));
     return field;
   }
 

@@ -484,6 +484,10 @@ public final class ApiTool {
     return getNodeAsString(schema, "description");
   }
 
+  public static boolean isDeprecated(final JsonNode schema) {
+    return getNodeAsBoolean(schema, "deprecated");
+  }
+
   public static String getExample(final JsonNode schema) {
     // OpenAPI 3.0 uses a single `example`; OpenAPI 3.1 / JSON Schema 2020-12 use an
     // `examples` array. Prefer `example`, otherwise take the first `examples` entry.

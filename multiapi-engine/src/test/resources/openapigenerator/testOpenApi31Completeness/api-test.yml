@@ -42,6 +42,9 @@ components:
           description: The unique gadget identifier
           examples:
             - "gadget-001"
+        legacyId:
+          type: string
+          deprecated: true
         serial:
           type: ["string", "null"]
           example: "SN-12345"

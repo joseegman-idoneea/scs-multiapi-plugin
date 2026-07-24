@@ -39,6 +39,8 @@ public class GadgetDTO {
       return String.valueOf(value);
     }
   }
+  @JsonProperty(value ="legacyId")
+  private String legacyId;
   @JsonProperty(value ="payload")
   private MultipartFile payload;
   @JsonProperty(value ="nothing")
@@ -56,6 +58,7 @@ public class GadgetDTO {
 
   private GadgetDTO(GadgetDTOBuilder builder) {
     this.status = builder.status;
+    this.legacyId = builder.legacyId;
     this.payload = builder.payload;
     this.nothing = builder.nothing;
     this.id = builder.id;
@@ -74,6 +77,7 @@ public class GadgetDTO {
   public static class GadgetDTOBuilder {
 
     private Status status;
+    private String legacyId;
     private MultipartFile payload;
     private Object nothing;
     private String id;
@@ -84,6 +88,11 @@ public class GadgetDTO {
 
     public GadgetDTO.GadgetDTOBuilder status(Status status) {
       this.status = status;
+      return this;
+    }
+
+    public GadgetDTO.GadgetDTOBuilder legacyId(String legacyId) {
+      this.legacyId = legacyId;
       return this;
     }
 
@@ -148,6 +157,14 @@ public class GadgetDTO {
   }
   public void setStatus(Status status) {
     this.status = status;
+  }
+
+  @Schema(name = "legacyId", required = false, deprecated = true)
+  public String getLegacyId() {
+    return legacyId;
+  }
+  public void setLegacyId(String legacyId) {
+    this.legacyId = legacyId;
   }
 
   @Schema(name = "payload", required = false)
@@ -215,12 +232,12 @@ public class GadgetDTO {
       return false;
     }
     GadgetDTO gadgetDTO = (GadgetDTO) o;
-    return Objects.equals(this.status, gadgetDTO.status) && Objects.equals(this.payload, gadgetDTO.payload) && Objects.equals(this.nothing, gadgetDTO.nothing) && Objects.equals(this.id, gadgetDTO.id) && Objects.equals(this.metadata, gadgetDTO.metadata) && Objects.equals(this.coords, gadgetDTO.coords) && Objects.equals(this.owner, gadgetDTO.owner) && Objects.equals(this.serial, gadgetDTO.serial);
+    return Objects.equals(this.status, gadgetDTO.status) && Objects.equals(this.legacyId, gadgetDTO.legacyId) && Objects.equals(this.payload, gadgetDTO.payload) && Objects.equals(this.nothing, gadgetDTO.nothing) && Objects.equals(this.id, gadgetDTO.id) && Objects.equals(this.metadata, gadgetDTO.metadata) && Objects.equals(this.coords, gadgetDTO.coords) && Objects.equals(this.owner, gadgetDTO.owner) && Objects.equals(this.serial, gadgetDTO.serial);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(status, payload, nothing, id, metadata, coords, owner, serial);
+    return Objects.hash(status, legacyId, payload, nothing, id, metadata, coords, owner, serial);
   }
 
   @Override
@@ -228,6 +245,7 @@ public class GadgetDTO {
     StringBuilder sb = new StringBuilder();
     sb.append("GadgetDTO{");
     sb.append(" status:").append(status).append(",");
+    sb.append(" legacyId:").append(legacyId).append(",");
     sb.append(" payload:").append(payload).append(",");
     sb.append(" nothing:").append(nothing).append(",");
     sb.append(" id:").append(id).append(",");
