@@ -837,13 +837,15 @@ from a local JAR containing `contracts/event-api.yml` in its resources:
 
 ## Loading specifications from a remote URL (Apicurio Registry, HTTP)
 
-`filePath` also accepts a remote URL (`http`, `https` or `file` scheme). When it does,
-the specification is downloaded at generation time instead of being read from the filesystem or
-the classpath. This works for both OpenAPI and AsyncAPI specs. Remote fetches use bounded
-connect/read timeouts so an unresponsive server cannot hang the build.
+`filePath` also accepts a remote URL (`http`, `https` or `file` scheme). When
+it does, the spec is downloaded at generation time instead of being read from
+the filesystem or the classpath. This works for both OpenAPI and AsyncAPI
+specs. Remote fetches use bounded connect/read timeouts so an unresponsive
+server cannot hang the build.
 
-This is the mechanism to consume a spec published in an **Apicurio Registry**, whose artifacts are
-served over HTTP. Point `filePath` at the artifact's content endpoint, for example:
+This is the mechanism to consume a spec published in an **Apicurio Registry**,
+whose artifacts are served over HTTP. Point `filePath` at the artifact's
+content endpoint, for example:
 
 ```xml
 <specFile>
@@ -861,20 +863,23 @@ filePath = 'https://my-apicurio-host/apis/registry/v2/groups/default/artifacts/m
 
 ### Authenticated registries
 
-For a protected registry (e.g. an Apicurio Registry with security enabled), credentials are read
-from **system properties** (preferred) or **environment variables** — never from the build files —
-and sent as request headers on `http`/`https` fetches. Supported schemes:
+For a protected registry (for example an Apicurio Registry with security
+enabled), credentials are read from **system properties** (preferred) or
+**environment variables** — never from the build files — and sent as request
+headers on `http`/`https` fetches. Each mechanism has a system property and an
+equivalent environment variable:
 
-| Purpose | System property | Environment variable |
-| --- | --- | --- |
-| Bearer token | `scs.multiapi.remote.token` | `SCS_MULTIAPI_REMOTE_TOKEN` |
-| Basic user | `scs.multiapi.remote.user` | `SCS_MULTIAPI_REMOTE_USER` |
-| Basic password | `scs.multiapi.remote.password` | `SCS_MULTIAPI_REMOTE_PASSWORD` |
-| Custom header name | `scs.multiapi.remote.header.name` | `SCS_MULTIAPI_REMOTE_HEADER_NAME` |
-| Custom header value | `scs.multiapi.remote.header.value` | `SCS_MULTIAPI_REMOTE_HEADER_VALUE` |
-| Restrict creds to host | `scs.multiapi.remote.host` | `SCS_MULTIAPI_REMOTE_HOST` |
+- **Bearer token**: `scs.multiapi.remote.token` /
+  `SCS_MULTIAPI_REMOTE_TOKEN`.
+- **Basic auth**: `scs.multiapi.remote.user` + `scs.multiapi.remote.password`
+  (env `SCS_MULTIAPI_REMOTE_USER` / `SCS_MULTIAPI_REMOTE_PASSWORD`).
+- **Custom header**: `scs.multiapi.remote.header.name` +
+  `scs.multiapi.remote.header.value` (env `SCS_MULTIAPI_REMOTE_HEADER_NAME` /
+  `SCS_MULTIAPI_REMOTE_HEADER_VALUE`), e.g. an `X-Registry-ApiKey`.
+- **Restrict credentials to a host**: `scs.multiapi.remote.host`
+  (env `SCS_MULTIAPI_REMOTE_HOST`).
 
-A bearer token takes precedence over basic auth; the custom header (e.g. `X-Registry-ApiKey`) is
+A bearer token takes precedence over basic auth; the custom header is
 additive. Example (bearer token from the CI environment):
 
 ```bash
@@ -884,10 +889,14 @@ mvn generate-sources
 ```
 
 Notes:
-- Set `scs.multiapi.remote.host` to the registry host so the token is sent **only** to that host
-  and never leaked to a different host reached through an external `$ref` or a cross-host redirect.
-- Provide credentials via CI secrets / environment variables; they are never logged.
-- External `$ref`s are resolved relative to the spec's URL when the spec itself is remote.
-- For an `https` registry using an internally-issued/self-signed certificate, the certificate
-  must be trusted by the JVM running the build (e.g. imported into its truststore); certificate
-  validation is not disabled.
+
+- Set `scs.multiapi.remote.host` to the registry host so the token is sent
+  **only** to that host and never leaked to a different host reached through
+  an external `$ref` or a cross-host redirect.
+- Provide credentials via CI secrets / environment variables; they are never
+  logged.
+- External `$ref`s are resolved relative to the spec's URL when the spec is
+  remote.
+- For an `https` registry using an internally-issued or self-signed
+  certificate, the certificate must be trusted by the JVM running the build
+  (for example imported into its truststore); validation is not disabled.
