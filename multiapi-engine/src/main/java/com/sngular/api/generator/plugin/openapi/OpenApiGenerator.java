@@ -8,6 +8,7 @@ package com.sngular.api.generator.plugin.openapi;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import com.sngular.api.generator.plugin.common.model.TypeConstants;
 import com.sngular.api.generator.plugin.common.tools.ApiTool;
 import com.sngular.api.generator.plugin.common.tools.MapperContentUtil;
 import com.sngular.api.generator.plugin.common.tools.MapperUtil;
+import com.sngular.api.generator.plugin.common.tools.PathUtil;
 import com.sngular.api.generator.plugin.exception.GeneratorTemplateException;
 import com.sngular.api.generator.plugin.openapi.exception.DuplicateModelClassException;
 import com.sngular.api.generator.plugin.openapi.model.AuthObject;
@@ -99,7 +101,10 @@ public class OpenApiGenerator {
 
     final JsonNode openAPI = OpenApiUtil.getPojoFromSpecFile(baseDir, specFile);
     OpenApiUtil.mergeWebhooksIntoPaths(openAPI);
-    OpenApiUtil.solvePathRefs(openAPI, baseDir.resolve(specFile.getFilePath()).getParent().toUri());
+    final URI specBaseUri = PathUtil.isRemoteUri(specFile.getFilePath())
+                                ? URI.create(specFile.getFilePath()).resolve(".")
+                                : baseDir.resolve(specFile.getFilePath()).getParent().toUri();
+    OpenApiUtil.solvePathRefs(openAPI, specBaseUri);
     final String clientPackage = specFile.getClientPackage();
 
     if (specFile.isCallMode()) {

@@ -26,6 +26,7 @@ import com.sngular.api.generator.plugin.asyncapi.parameter.SpecFile;
 import com.sngular.api.generator.plugin.common.files.ClasspathFileLocation;
 import com.sngular.api.generator.plugin.common.files.DirectoryFileLocation;
 import com.sngular.api.generator.plugin.common.files.FileLocation;
+import com.sngular.api.generator.plugin.common.files.RemoteFileLocation;
 import com.sngular.api.generator.plugin.common.tools.PathUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -85,6 +86,15 @@ public class AsyncApiGenerator {
 
   private static Pair<InputStream, FileLocation> resolveYmlLocation(final String ymlFilePath) throws FileNotFoundException {
     log.debug("Resolving YAML file location:{}", ymlFilePath);
+    if (PathUtil.isRemoteUri(ymlFilePath)) {
+      log.debug("Loading spec from remote URL");
+      try {
+        final URI uri = URI.create(ymlFilePath);
+        return new ImmutablePair<>(uri.toURL().openStream(), new RemoteFileLocation(uri.resolve(".")));
+      } catch (final IOException e) {
+        throw new FileNotFoundException("Could not open remote YAML file: " + ymlFilePath);
+      }
+    }
     final InputStream classPathInput = AsyncApiGenerator.class.getClassLoader().getResourceAsStream(ymlFilePath);
     final InputStream ymlFile;
     final FileLocation ymlParentPath;

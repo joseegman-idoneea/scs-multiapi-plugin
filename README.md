@@ -834,3 +834,31 @@ from a local JAR containing `contracts/event-api.yml` in its resources:
   </dependencies>
 </plugin>
 ```
+
+## Loading specifications from a remote URL (Apicurio Registry, HTTP)
+
+`filePath` also accepts a remote URL (`http`, `https`, `ftp` or `file` scheme). When it does,
+the specification is downloaded at generation time instead of being read from the filesystem or
+the classpath. This works for both OpenAPI and AsyncAPI specs.
+
+This is the mechanism to consume a spec published in an **Apicurio Registry**, whose artifacts are
+served over HTTP. Point `filePath` at the artifact's content endpoint, for example:
+
+```xml
+<specFile>
+    <filePath>https://my-apicurio-host/apis/registry/v2/groups/default/artifacts/my-api</filePath>
+    <apiPackage>com.sngular.apigenerator.openapi.api</apiPackage>
+    <modelPackage>com.sngular.apigenerator.openapi.model</modelPackage>
+</specFile>
+```
+
+Gradle:
+
+```groovy
+filePath = 'https://my-apicurio-host/apis/registry/v2/groups/default/artifacts/my-api'
+```
+
+Notes:
+- Only publicly reachable URLs are supported for now; authenticated registries (tokens/headers)
+  are not yet handled.
+- External `$ref`s are resolved relative to the spec's URL when the spec itself is remote.

@@ -37,4 +37,17 @@ public final class PathUtil {
       return false;
     }
   }
+
+  /**
+   * Checks whether a spec path points to a remote/URL location that must be fetched via a
+   * {@link java.net.URL} stream rather than the filesystem or classpath. Enables loading
+   * specifications from HTTP(S) endpoints such as an Apicurio Registry artifact.
+   *
+   * @param filePath the spec path to check
+   * @return true if the path uses an http, https, ftp or file scheme
+   */
+  public static boolean isRemoteUri(final String filePath) {
+    return StringUtils.isNotEmpty(filePath)
+           && filePath.matches("^(?i)(https?|ftp|file)://.*");
+  }
 }

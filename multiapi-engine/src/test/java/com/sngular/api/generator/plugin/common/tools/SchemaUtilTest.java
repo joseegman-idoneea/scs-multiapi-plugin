@@ -42,4 +42,26 @@ class SchemaUtilTest {
       try { Files.walk(tmp).map(Path::toFile).sorted((a,b)->-a.compareTo(b)).forEach(java.io.File::delete); } catch (Exception ignored) {}
     }
   }
+
+  @Test
+  void shouldLoadSpecFromUrl() throws Exception {
+    // Loading a spec from a URL is the mechanism used for remote sources (e.g. an Apicurio
+    // Registry artifact). A file:// URL exercises the same URL code path without network access.
+    final Path tmp = Files.createTempDirectory("schema-util-url-test");
+    try {
+      final Path openapiFile = tmp.resolve("openapi.yml");
+      Files.writeString(openapiFile, "components:\n  schemas:\n    Pet:\n      type: object\n");
+
+      final String url = openapiFile.toUri().toString(); // file:///...
+      assertTrue(PathUtil.isRemoteUri(url), "A file:// path must be detected as a remote URI");
+
+      // rootFilePath is irrelevant for a remote URL; it is fetched directly.
+      final JsonNode node = SchemaUtil.getPojoFromRef(tmp.toUri(), url);
+
+      assertNotNull(node, "El nodo no debe ser nulo");
+      assertTrue(node.path("components").path("schemas").has("Pet"), "Debe contener el schema 'Pet'");
+    } finally {
+      try { Files.walk(tmp).map(Path::toFile).sorted((a, b) -> -a.compareTo(b)).forEach(java.io.File::delete); } catch (Exception ignored) {}
+    }
+  }
 }

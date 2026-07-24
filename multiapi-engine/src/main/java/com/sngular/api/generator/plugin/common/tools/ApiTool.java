@@ -453,8 +453,10 @@ public final class ApiTool {
 
   public static JsonNode nodeFromFile(final FileLocation ymlParent, final String filePath, final FactoryTypeEnum factoryTypeEnum) throws IOException {
     final InputStream file;
-    // Check if path is absolute first
-    if (PathUtil.isAbsolutePath(filePath)) {
+    // Remote references (http/https/ftp/file URLs) are fetched directly from their URL.
+    if (PathUtil.isRemoteUri(filePath)) {
+      file = new java.net.URL(filePath).openStream();
+    } else if (PathUtil.isAbsolutePath(filePath)) {
       // For absolute paths, open directly
       file = new FileInputStream(filePath);
     } else if (filePath.startsWith(PACKAGE_SEPARATOR_STR) || filePath.matches("^\\w.*$")) {
