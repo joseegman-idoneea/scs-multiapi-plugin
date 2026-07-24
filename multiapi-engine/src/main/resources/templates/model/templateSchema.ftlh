@@ -340,7 +340,7 @@ public class ${schema.className} {
   }
 
 <#list schema.fieldObjectList as field>
-  @Schema(name = "${field.baseName?uncap_first}", required = <#if field.required?has_content && field.required == true>true<#else>false</#if><#if field.description?has_content>, description = "${field.description?j_string}"</#if><#if field.example?has_content>, example = "${field.example?j_string}"</#if>)
+  @Schema(name = "${field.baseName?uncap_first}", required = <#if field.required?has_content && field.required == true>true<#else>false</#if><#if field.description?has_content>, description = "${field.description?j_string}"</#if><#if field.example?has_content>, example = "${field.example?j_string}"</#if><#if field.deprecated>, deprecated = true</#if>)
   <#if field.dataType.baseType == "array">
   public ${field.dataType} get${field.baseName?cap_first}() {
     return ${calculateSafeName (field.baseName, ";")}

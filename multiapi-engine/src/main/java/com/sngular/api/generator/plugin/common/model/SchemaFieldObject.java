@@ -32,4 +32,6 @@ public class SchemaFieldObject {
   private String description;
 
   private String example;
+
+  private boolean deprecated;
 }
