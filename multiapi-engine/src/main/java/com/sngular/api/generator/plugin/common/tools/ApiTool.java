@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -455,7 +456,7 @@ public final class ApiTool {
     final InputStream file;
     // Remote references (http/https/ftp/file URLs) are fetched directly from their URL.
     if (PathUtil.isRemoteUri(filePath)) {
-      file = PathUtil.openUrlStream(new java.net.URL(filePath));
+      file = PathUtil.openUrlStream(URI.create(filePath).toURL());
     } else if (PathUtil.isAbsolutePath(filePath)) {
       // For absolute paths, open directly
       file = new FileInputStream(filePath);

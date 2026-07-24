@@ -119,8 +119,10 @@ public final class PathUtil {
     if (StringUtils.isNotBlank(token)) {
       headers.put("Authorization", "Bearer " + token);
     } else if (StringUtils.isNotBlank(user)) {
-      final String password = StringUtils.defaultString(config("scs.multiapi.remote.password", "SCS_MULTIAPI_REMOTE_PASSWORD"));
-      final String basic = Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8));
+      final String password = StringUtils.defaultString(
+          config("scs.multiapi.remote.password", "SCS_MULTIAPI_REMOTE_PASSWORD"));
+      final String credentials = user + ":" + password;
+      final String basic = Base64.getEncoder().encodeToString(credentials.getBytes(StandardCharsets.UTF_8));
       headers.put("Authorization", "Basic " + basic);
     }
 

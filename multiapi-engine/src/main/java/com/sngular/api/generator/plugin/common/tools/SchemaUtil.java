@@ -140,7 +140,7 @@ public class SchemaUtil {
     // Remote specifications (http/https/ftp/file URLs, e.g. an Apicurio Registry artifact) are
     // fetched directly from their URL, bypassing classpath and filesystem resolution.
     if (PathUtil.isRemoteUri(filePath)) {
-      return readFromUrl(new URL(filePath));
+      return readFromUrl(URI.create(filePath).toURL());
     }
 
     // Normalize the incoming filePath: remove leading './' and replace backslashes with forward slashes

@@ -90,7 +90,8 @@ public class AsyncApiGenerator {
       log.debug("Loading spec from remote URL");
       try {
         final URI uri = URI.create(ymlFilePath);
-        return new ImmutablePair<>(uri.toURL().openStream(), new RemoteFileLocation(uri.resolve(".")));
+        final InputStream remoteStream = PathUtil.openUrlStream(uri.toURL());
+        return new ImmutablePair<>(remoteStream, new RemoteFileLocation(uri.resolve(".")));
       } catch (final IOException e) {
         throw new FileNotFoundException("Could not open remote YAML file: " + ymlFilePath);
       }

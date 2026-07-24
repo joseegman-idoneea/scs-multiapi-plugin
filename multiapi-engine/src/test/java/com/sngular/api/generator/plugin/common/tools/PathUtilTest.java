@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
@@ -65,7 +66,7 @@ class PathUtilTest {
   void remoteAuthHeadersBasicAuth() {
     System.setProperty("scs.multiapi.remote.user", "alice");
     System.setProperty("scs.multiapi.remote.password", "s3cret");
-    final String expected = "Basic " + Base64.getEncoder().encodeToString("alice:s3cret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    final String expected = "Basic " + Base64.getEncoder().encodeToString("alice:s3cret".getBytes(StandardCharsets.UTF_8));
     assertEquals(expected, PathUtil.remoteAuthHeaders("registry.example.com").get("Authorization"));
   }
 
