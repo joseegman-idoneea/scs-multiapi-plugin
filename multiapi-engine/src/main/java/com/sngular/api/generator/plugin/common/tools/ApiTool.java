@@ -480,6 +480,32 @@ public final class ApiTool {
     return om.readTree(file);
   }
 
+  public static String getDescription(final JsonNode schema) {
+    return getNodeAsString(schema, "description");
+  }
+
+  public static String getExample(final JsonNode schema) {
+    // OpenAPI 3.0 uses a single `example`; OpenAPI 3.1 / JSON Schema 2020-12 use an
+    // `examples` array. Prefer `example`, otherwise take the first `examples` entry.
+    if (hasNode(schema, "example")) {
+      return asExampleText(getNode(schema, "example"));
+    }
+    if (hasNode(schema, "examples")) {
+      final JsonNode examples = getNode(schema, "examples");
+      if (examples.isArray() && examples.elements().hasNext()) {
+        return asExampleText(examples.elements().next());
+      }
+    }
+    return null;
+  }
+
+  private static String asExampleText(final JsonNode example) {
+    if (Objects.isNull(example) || example.isNull()) {
+      return null;
+    }
+    return example.isValueNode() ? example.asText() : example.toString();
+  }
+
   public static boolean hasConst(final JsonNode fieldBody) {
     return hasNode(fieldBody, "const");
   }

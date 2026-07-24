@@ -127,7 +127,7 @@ public class GadgetDTO {
     this.nothing = nothing;
   }
 
-  @Schema(name = "id", required = false)
+  @Schema(name = "id", required = false, description = "The unique gadget identifier", example = "gadget-001")
   public String getId() {
     return id;
   }
@@ -159,7 +159,7 @@ public class GadgetDTO {
     this.owner = owner;
   }
 
-  @Schema(name = "serial", required = false)
+  @Schema(name = "serial", required = false, example = "SN-12345")
   public String getSerial() {
     return serial;
   }

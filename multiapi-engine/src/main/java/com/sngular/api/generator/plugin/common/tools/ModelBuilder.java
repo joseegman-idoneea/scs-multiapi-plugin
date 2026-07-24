@@ -339,7 +339,26 @@ public final class ModelBuilder {
     } else {
       fieldObjectArrayList.addAll(processFieldObjectList(buildingSchema, fieldName, fieldName, fieldBody, specFile, totalSchemas, compositedSchemas, antiLoopList, baseDir));
     }
+    applyMetadata(fieldObjectArrayList, fieldName, fieldBody);
     return fieldObjectArrayList;
+  }
+
+  private static void applyMetadata(final List<SchemaFieldObject> fields, final String fieldName, final JsonNode fieldBody) {
+    final String description = ApiTool.getDescription(fieldBody);
+    final String example = ApiTool.getExample(fieldBody);
+    if (Objects.isNull(description) && Objects.isNull(example)) {
+      return;
+    }
+    for (final var field : fields) {
+      if (Objects.equals(field.getBaseName(), fieldName)) {
+        if (Objects.nonNull(description)) {
+          field.setDescription(description);
+        }
+        if (Objects.nonNull(example)) {
+          field.setExample(example);
+        }
+      }
+    }
   }
 
   private static Object getConst(final JsonNode fieldBody) {

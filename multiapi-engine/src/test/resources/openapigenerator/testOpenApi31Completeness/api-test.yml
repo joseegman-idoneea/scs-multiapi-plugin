@@ -39,8 +39,12 @@ components:
       properties:
         id:
           type: string
+          description: The unique gadget identifier
+          examples:
+            - "gadget-001"
         serial:
           type: ["string", "null"]
+          example: "SN-12345"
         payload:
           type: string
           contentEncoding: base64

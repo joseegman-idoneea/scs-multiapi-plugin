@@ -47,7 +47,7 @@ public class UserMessage {
     }
   }
 
-  @Schema(name = "firstName", required = false)
+  @Schema(name = "firstName", required = false, description = "foo")
   public String getFirstName() {
     return firstName;
   }
@@ -55,7 +55,7 @@ public class UserMessage {
     this.firstName = firstName;
   }
 
-  @Schema(name = "lastName", required = false)
+  @Schema(name = "lastName", required = false, description = "bar")
   public String getLastName() {
     return lastName;
   }

@@ -98,22 +98,22 @@ public class DataDTO {
     }
   }
 
-  @Schema(name = "clientName", required = true)
+  @Schema(name = "clientName", required = true, description = "Nombre del cliente.")
   public String getClientName() {
     return clientName;
   }
 
-  @Schema(name = "flightNumber", required = true)
+  @Schema(name = "flightNumber", required = true, description = "Número de vuelo.")
   public String getFlightNumber() {
     return flightNumber;
   }
 
-  @Schema(name = "clientId", required = true)
+  @Schema(name = "clientId", required = true, description = "Id del cliente.")
   public Integer getClientId() {
     return clientId;
   }
 
-  @Schema(name = "test", required = false)
+  @Schema(name = "test", required = false, description = "Array para probar anotaciones")
   public List<Integer> getTest() {
     return test;
   }
