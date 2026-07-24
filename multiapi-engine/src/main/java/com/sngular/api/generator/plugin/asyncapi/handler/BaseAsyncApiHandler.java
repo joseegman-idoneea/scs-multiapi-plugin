@@ -21,6 +21,8 @@ import com.sngular.api.generator.plugin.asyncapi.parameter.OperationParameterObj
 import com.sngular.api.generator.plugin.asyncapi.parameter.SpecFile;
 import com.sngular.api.generator.plugin.asyncapi.template.TemplateFactory;
 import com.sngular.api.generator.plugin.common.files.ClasspathFileLocation;
+import com.sngular.api.generator.plugin.common.files.RemoteFileLocation;
+import com.sngular.api.generator.plugin.common.tools.PathUtil;
 import com.sngular.api.generator.plugin.common.files.DirectoryFileLocation;
 import com.sngular.api.generator.plugin.common.files.FileLocation;
 import com.sngular.api.generator.plugin.common.model.CommonSpecFile;
@@ -108,6 +110,9 @@ public abstract class BaseAsyncApiHandler {
   }
 
   protected static FileLocation resolveYmlLocation(final String ymlFilePath) throws IOException, URISyntaxException {
+    if (PathUtil.isRemoteUri(ymlFilePath)) {
+      return new RemoteFileLocation(URI.create(ymlFilePath).resolve("."));
+    }
     final var classPathInput = BaseAsyncApiHandler.class.getClassLoader().getResource(ymlFilePath);
     if (Objects.nonNull(classPathInput)) {
       return new ClasspathFileLocation(getParentUri(classPathInput.toURI()));

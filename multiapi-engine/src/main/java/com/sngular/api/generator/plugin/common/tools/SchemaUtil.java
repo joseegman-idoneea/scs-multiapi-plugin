@@ -137,6 +137,12 @@ public class SchemaUtil {
       throw new IllegalArgumentException("File Path cannot be empty");
     }
 
+    // Remote specifications (http/https/ftp/file URLs, e.g. an Apicurio Registry artifact) are
+    // fetched directly from their URL, bypassing classpath and filesystem resolution.
+    if (PathUtil.isRemoteUri(filePath)) {
+      return readFromUrl(URI.create(filePath).toURL());
+    }
+
     // Normalize the incoming filePath: remove leading './' and replace backslashes with forward slashes
     final String cleaned = cleanUpPath(filePath).replace('\\', '/');
 
@@ -161,8 +167,12 @@ public class SchemaUtil {
         }
       }
     }
+    return readFromUrl(fileURL);
+  }
+
+  private static String readFromUrl(final URL fileURL) {
     final var sb = new StringBuilder();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(fileURL.openStream()))) {
+    try (BufferedReader reader = new BufferedReader(new InputStreamReader(PathUtil.openUrlStream(fileURL)))) {
       String inputLine;
       while ((inputLine = reader.readLine()) != null) {
         sb.append(inputLine).append(System.lineSeparator());

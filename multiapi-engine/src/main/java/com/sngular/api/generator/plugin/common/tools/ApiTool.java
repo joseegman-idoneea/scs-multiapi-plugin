@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -453,8 +454,10 @@ public final class ApiTool {
 
   public static JsonNode nodeFromFile(final FileLocation ymlParent, final String filePath, final FactoryTypeEnum factoryTypeEnum) throws IOException {
     final InputStream file;
-    // Check if path is absolute first
-    if (PathUtil.isAbsolutePath(filePath)) {
+    // Remote references (http/https/ftp/file URLs) are fetched directly from their URL.
+    if (PathUtil.isRemoteUri(filePath)) {
+      file = PathUtil.openUrlStream(URI.create(filePath).toURL());
+    } else if (PathUtil.isAbsolutePath(filePath)) {
       // For absolute paths, open directly
       file = new FileInputStream(filePath);
     } else if (filePath.startsWith(PACKAGE_SEPARATOR_STR) || filePath.matches("^\\w.*$")) {
