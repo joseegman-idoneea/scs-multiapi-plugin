@@ -6,12 +6,29 @@
 
 package com.sngular.api.generator.plugin.common.tools;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Base64;
+import java.util.Map;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 class PathUtilTest {
+
+  private static final String[] AUTH_PROPS = {
+      "scs.multiapi.remote.host", "scs.multiapi.remote.token", "scs.multiapi.remote.user",
+      "scs.multiapi.remote.password", "scs.multiapi.remote.header.name", "scs.multiapi.remote.header.value"
+  };
+
+  @AfterEach
+  void clearAuthProps() {
+    for (final String prop : AUTH_PROPS) {
+      System.clearProperty(prop);
+    }
+  }
 
   @Test
   void isRemoteUriDetectsUrlSchemes() {
@@ -30,5 +47,42 @@ class PathUtilTest {
     assertFalse(PathUtil.isRemoteUri("C:\\api\\api.yml"));
     assertFalse(PathUtil.isRemoteUri(""));
     assertFalse(PathUtil.isRemoteUri(null));
+  }
+
+  @Test
+  void remoteAuthHeadersEmptyWhenUnconfigured() {
+    assertTrue(PathUtil.remoteAuthHeaders("registry.example.com").isEmpty());
+  }
+
+  @Test
+  void remoteAuthHeadersBearerToken() {
+    System.setProperty("scs.multiapi.remote.token", "abc123");
+    final Map<String, String> headers = PathUtil.remoteAuthHeaders("registry.example.com");
+    assertEquals("Bearer abc123", headers.get("Authorization"));
+  }
+
+  @Test
+  void remoteAuthHeadersBasicAuth() {
+    System.setProperty("scs.multiapi.remote.user", "alice");
+    System.setProperty("scs.multiapi.remote.password", "s3cret");
+    final String expected = "Basic " + Base64.getEncoder().encodeToString("alice:s3cret".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    assertEquals(expected, PathUtil.remoteAuthHeaders("registry.example.com").get("Authorization"));
+  }
+
+  @Test
+  void remoteAuthHeadersArbitraryHeader() {
+    System.setProperty("scs.multiapi.remote.header.name", "X-Registry-ApiKey");
+    System.setProperty("scs.multiapi.remote.header.value", "key-42");
+    assertEquals("key-42", PathUtil.remoteAuthHeaders("registry.example.com").get("X-Registry-ApiKey"));
+  }
+
+  @Test
+  void remoteAuthHeadersScopedToConfiguredHost() {
+    System.setProperty("scs.multiapi.remote.token", "abc123");
+    System.setProperty("scs.multiapi.remote.host", "registry.example.com");
+    // Matching host receives the credentials.
+    assertEquals("Bearer abc123", PathUtil.remoteAuthHeaders("registry.example.com").get("Authorization"));
+    // A different host (e.g. reached via an external $ref) must NOT receive them.
+    assertTrue(PathUtil.remoteAuthHeaders("evil.example.org").isEmpty());
   }
 }

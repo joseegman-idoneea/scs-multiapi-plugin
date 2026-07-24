@@ -859,9 +859,34 @@ Gradle:
 filePath = 'https://my-apicurio-host/apis/registry/v2/groups/default/artifacts/my-api'
 ```
 
+### Authenticated registries
+
+For a protected registry (e.g. an Apicurio Registry with security enabled), credentials are read
+from **system properties** (preferred) or **environment variables** — never from the build files —
+and sent as request headers on `http`/`https` fetches. Supported schemes:
+
+| Purpose | System property | Environment variable |
+| --- | --- | --- |
+| Bearer token | `scs.multiapi.remote.token` | `SCS_MULTIAPI_REMOTE_TOKEN` |
+| Basic user | `scs.multiapi.remote.user` | `SCS_MULTIAPI_REMOTE_USER` |
+| Basic password | `scs.multiapi.remote.password` | `SCS_MULTIAPI_REMOTE_PASSWORD` |
+| Custom header name | `scs.multiapi.remote.header.name` | `SCS_MULTIAPI_REMOTE_HEADER_NAME` |
+| Custom header value | `scs.multiapi.remote.header.value` | `SCS_MULTIAPI_REMOTE_HEADER_VALUE` |
+| Restrict creds to host | `scs.multiapi.remote.host` | `SCS_MULTIAPI_REMOTE_HOST` |
+
+A bearer token takes precedence over basic auth; the custom header (e.g. `X-Registry-ApiKey`) is
+additive. Example (bearer token from the CI environment):
+
+```bash
+export SCS_MULTIAPI_REMOTE_TOKEN="$APICURIO_TOKEN"
+export SCS_MULTIAPI_REMOTE_HOST="my-apicurio-host"   # optional but recommended
+mvn generate-sources
+```
+
 Notes:
-- Only publicly reachable URLs are supported for now; authenticated registries (tokens/headers)
-  are not yet handled.
+- Set `scs.multiapi.remote.host` to the registry host so the token is sent **only** to that host
+  and never leaked to a different host reached through an external `$ref` or a cross-host redirect.
+- Provide credentials via CI secrets / environment variables; they are never logged.
 - External `$ref`s are resolved relative to the spec's URL when the spec itself is remote.
 - For an `https` registry using an internally-issued/self-signed certificate, the certificate
   must be trusted by the JVM running the build (e.g. imported into its truststore); certificate
