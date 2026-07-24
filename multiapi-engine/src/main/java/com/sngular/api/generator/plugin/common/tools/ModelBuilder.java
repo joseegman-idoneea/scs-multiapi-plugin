@@ -169,12 +169,12 @@ public final class ModelBuilder {
                                                                          baseDir));
       }
     } else if (TypeConstants.ARRAY.equalsIgnoreCase(ApiTool.getType(schema))) {
-      final String itemType = ApiTool.hasRef(ApiTool.getItems(schema)) ? MapperUtil.getPojoNameFromRef(ApiTool.getItems(schema), specFile, null)
-                                  : ApiTool.getType(ApiTool.getItems(schema));
       fieldObjectArrayList.add(SchemaFieldObject.builder()
                                                 .baseName("items")
-                                                .dataType(SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, itemType))
+                                                .dataType(SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, resolveArrayItemType(schema, specFile)))
                                                 .build());
+    } else if (ApiTool.hasPatternProperties(schema)) {
+      fieldObjectArrayList.add(buildPatternPropertiesField(ApiTool.getName(schema), schema, specFile));
     } else if (ApiTool.isAllOf(schema)) {
       fieldObjectArrayList.addAll(processAllOf(totalSchemas, ApiTool.getAllOf(schema), specFile, compositedSchemas, antiLoopList, baseDir));
     } else if (ApiTool.isAnyOf(schema)) {
@@ -209,6 +209,8 @@ public final class ModelBuilder {
       fieldObjectArrayList.addAll(processArray(fieldName, className, schema, specFile, totalSchemas, compositedSchemas, antiLoopList, baseDir));
     } else if (ApiTool.hasAdditionalProperties(schema)) {
       fieldObjectArrayList.addAll(processMap(fieldName, schema, specFile, totalSchemas, compositedSchemas, antiLoopList, baseDir));
+    } else if (ApiTool.hasPatternProperties(schema)) {
+      fieldObjectArrayList.add(buildPatternPropertiesField(fieldName, schema, specFile));
     } else if (ApiTool.hasRef(schema)) {
       fieldObjectArrayList.add(
           processRef(fieldName, schema, new SchemaFieldObjectType(MapperUtil.getSimpleType(schema, specFile)), totalSchemas, compositedSchemas, antiLoopList, specFile, baseDir));
@@ -426,11 +428,17 @@ public final class ModelBuilder {
       final Map<String, SchemaObject> compositedSchemas, final Set<String> antiLoopList, final Path baseDir) {
     final List<SchemaFieldObject> fieldObjectArrayList = new LinkedList<>();
 
-    if (!ApiTool.hasItems(schema)) {
+    if (!ApiTool.hasItems(schema) || ApiTool.getItems(schema).isBoolean()) {
+      // No `items` schema, or `items: false` (JSON Schema 2020-12). If the array
+      // declares positional `prefixItems` (tuple), or nothing typable at all, the
+      // element type degrades to Object -> List<Object>.
+      final boolean isTuple = ApiTool.hasPrefixItems(schema);
       fieldObjectArrayList.add(SchemaFieldObject
                                    .builder()
                                    .baseName(fieldName)
-                                   .dataType(new SchemaFieldObjectType(TypeConstants.OBJECT))
+                                   .dataType(isTuple
+                                                 ? SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, TypeConstants.OBJECT)
+                                                 : new SchemaFieldObjectType(TypeConstants.OBJECT))
                                    .build());
     } else {
       final var items = ApiTool.getItems(schema);
@@ -626,7 +634,9 @@ public final class ModelBuilder {
   private static void setFieldType(
       final SchemaFieldObject field, final JsonNode schemaProperty, final JsonNode schema,
       final CommonSpecFile specFile, final String key) {
-    field.setRequired(ApiTool.hasRequired(schema) && ApiTool.checkIfRequired(schema, key));
+    // A nullable field (3.0 `nullable: true` or the 3.1 ["T","null"] idiom) must not be
+    // marked required, otherwise the generated @NotNull would reject a legitimate null value.
+    field.setRequired(ApiTool.hasRequired(schema) && ApiTool.checkIfRequired(schema, key) && !ApiTool.isNullable(schemaProperty));
     if (ApiTool.isArray(schemaProperty)) {
       final String typeArray;
       if (ApiTool.hasItems(schemaProperty)) {
@@ -886,6 +896,39 @@ public final class ModelBuilder {
 
   private static String getImportClass(final String type) {
     return StringUtils.isNotBlank(type) && !TypeConstants.NO_IMPORT_TYPE.contains(type) ? StringUtils.capitalize(type) : "";
+  }
+
+  private static String resolveArrayItemType(final JsonNode schema, final CommonSpecFile specFile) {
+    final var items = ApiTool.getItems(schema);
+    if (Objects.nonNull(items) && !items.isBoolean()) {
+      return ApiTool.hasRef(items) ? MapperUtil.getPojoNameFromRef(items, specFile, null) : ApiTool.getType(items);
+    }
+    // `prefixItems` (tuple) or `items: false` -> degrade the element type to Object.
+    return TypeConstants.OBJECT;
+  }
+
+  private static SchemaFieldObject buildPatternPropertiesField(
+      final String fieldName, final JsonNode schema, final CommonSpecFile specFile) {
+    // JSON Schema 2020-12 `patternProperties` maps regex keys to a value schema.
+    // We model it as Map<String, ValueType> using the first declared pattern's value schema.
+    final var patternProps = ApiTool.getPatternProperties(schema);
+    final var valueSchemas = patternProps.elements();
+    final JsonNode valueSchema = valueSchemas.hasNext() ? valueSchemas.next() : null;
+    final String valueType;
+    if (Objects.isNull(valueSchema)) {
+      valueType = TypeConstants.OBJECT;
+    } else if (ApiTool.hasRef(valueSchema)) {
+      valueType = MapperUtil.getPojoNameFromRef(valueSchema, specFile, null);
+    } else if (isBasicType(valueSchema) && ApiTool.hasType(valueSchema)) {
+      valueType = MapperUtil.getSimpleType(valueSchema, specFile);
+    } else {
+      valueType = TypeConstants.OBJECT;
+    }
+    return SchemaFieldObject
+               .builder()
+               .baseName(StringUtils.defaultIfBlank(fieldName, ADDITIONAL_PROPERTIES))
+               .dataType(SchemaFieldObjectType.fromTypeList(TypeConstants.MAP, valueType))
+               .build();
   }
 
 

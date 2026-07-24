@@ -1,0 +1,66 @@
+---
+# Regression for additional OpenAPI 3.1 / JSON Schema 2020-12 features:
+#  - $defs as a schema source (#/$defs/Person)                     -> generates PersonDTO
+#  - prefixItems tuple arrays                                       -> List<Object>
+#  - scalar type: "null"                                            -> Object (no invalid `null` type)
+#  - nullable via ["T","null"] idiom even when listed as required   -> no @NotNull
+#  - patternProperties object                                       -> Map<String, T>
+#  - 3.1 binary string via contentEncoding                          -> MultipartFile
+openapi: "3.1.0"
+info:
+  version: 1.0.0
+  title: Gadget API (OpenAPI 3.1)
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:8080/v1
+tags:
+  - name: gadget
+paths:
+  /gadget:
+    get:
+      summary: Get a gadget
+      operationId: getGadget
+      tags:
+        - gadget
+      responses:
+        '200':
+          description: The requested gadget
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Gadget"
+components:
+  schemas:
+    Gadget:
+      type: object
+      required:
+        - serial
+      properties:
+        id:
+          type: string
+        serial:
+          type: ["string", "null"]
+        payload:
+          type: string
+          contentEncoding: base64
+        coords:
+          type: array
+          prefixItems:
+            - type: number
+            - type: number
+        metadata:
+          type: object
+          patternProperties:
+            "^x-":
+              type: string
+        nothing:
+          type: "null"
+        owner:
+          $ref: "#/$defs/Person"
+$defs:
+  Person:
+    type: object
+    properties:
+      name:
+        type: string
