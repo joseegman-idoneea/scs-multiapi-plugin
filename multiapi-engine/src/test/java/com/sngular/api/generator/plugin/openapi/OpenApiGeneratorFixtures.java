@@ -81,6 +81,11 @@ public final class OpenApiGeneratorFixtures {
 					.modelPackage("com.sngular.multifileplugin.reactivegeneration.model").modelNamePrefix("Api")
 					.modelNameSuffix("DTO").useLombokModelAnnotation(false).isReactive(true).build());
 
+	static final List<SpecFile> TEST_REACTIVE_FORM_DATA_MULTIPART = List
+			.of(SpecFile.builder().filePath("openapigenerator/testReactiveFormDataMultipart/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.testreactiveformdatamultipart")
+					.useLombokModelAnnotation(false).isReactive(true).build());
+
 	static final List<SpecFile> TEST_API_TAGS_GENERATION = List
 			.of(SpecFile.builder().filePath("openapigenerator/testApiTagsGeneration/api-tags-test.yml")
 					.apiPackage("com.sngular.multifileplugin.tagsgeneration")
@@ -600,6 +605,22 @@ public final class OpenApiGeneratorFixtures {
 		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
 				DEFAULT_MODEL_API, Collections.emptyList(), null);
 
+	}
+
+	static Function<Path, Boolean> validateReactiveFormDataMultipart() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/testreactiveformdatamultipart";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/testreactiveformdatamultipart/model";
+
+		final String COMMON_PATH = "openapigenerator/testReactiveFormDataMultipart/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "UploadApi.java");
+
+		return path -> commonTest(path, expectedTestApiFile, Collections.emptyList(), DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
 	}
 
 	static Function<Path, Boolean> validateTagsGeneration() {

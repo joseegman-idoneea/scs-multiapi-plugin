@@ -63,6 +63,8 @@ class OpenApiGeneratorTest {
             OpenApiGeneratorFixtures.validatePathWithSpecialCharGeneration()),
         Arguments.of("testApiReactiveGeneration", OpenApiGeneratorFixtures.TEST_API_REACTIVE_GENERATION,
             OpenApiGeneratorFixtures.validateApiReactiveGeneration(SPRING_BOOT_VERSION)),
+        Arguments.of("testReactiveFormDataMultipart", OpenApiGeneratorFixtures.TEST_REACTIVE_FORM_DATA_MULTIPART,
+            OpenApiGeneratorFixtures.validateReactiveFormDataMultipart()),
         Arguments.of("testApiTagsGeneration", OpenApiGeneratorFixtures.TEST_API_TAGS_GENERATION,
             OpenApiGeneratorFixtures.validateTagsGeneration()),
         Arguments.of("testMultipleRefGeneration", OpenApiGeneratorFixtures.TEST_MULTIPLE_REF_GENERATION,
