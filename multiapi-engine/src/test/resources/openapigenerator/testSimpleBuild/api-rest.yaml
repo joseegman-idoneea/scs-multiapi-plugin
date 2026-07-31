@@ -522,6 +522,11 @@ components:
           type: string
           format: binary
           example: invoice01234.pdf
+        attachments:
+          type: array
+          items:
+            type: string
+            format: binary
         description:
           type: string
           example: Invoice for the sale 01234
