@@ -6,6 +6,10 @@ on:
 
 concurrency: pr-${{ github.event.pull_request.id }}
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   check-labels:
     runs-on: ubuntu-latest
