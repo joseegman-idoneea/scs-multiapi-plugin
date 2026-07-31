@@ -15,14 +15,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.multipart.MultipartFile;
 
-import com.sngular.multifileplugin.testformdatamultipartgeneration.InlineObjectTestMultipart;
 
 public interface TestApi {
 
   /**
    * GET /test
-   * @param inlineObjectTestMultipart (required)
+   * @param someFile @param someFiles @param someString (required)
    * @return  OK; (status code 200)
    */
 
@@ -36,10 +36,11 @@ public interface TestApi {
   @RequestMapping(
     method = RequestMethod.GET,
     value = "/test",
-    produces = {"application/json"}
+    produces = {"application/json"},
+    consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}
   )
 
-  default ResponseEntity<Void> testMultipart(@Parameter(name = "inlineObjectTestMultipart", description = "", required = true, schema = @Schema(description = "")) @Valid InlineObjectTestMultipart inlineObjectTestMultipart) {
+  default ResponseEntity<Void> testMultipart(@Parameter(name = "someFile", required = false, schema = @Schema(description = "")) @RequestPart(value = "someFile", required = false) MultipartFile someFile , @Parameter(name = "someFiles", required = false, schema = @Schema(description = "")) @RequestPart(value = "someFiles", required = false) List<MultipartFile> someFiles , @Parameter(name = "someString", required = false, schema = @Schema(description = "")) @RequestPart(value = "someString", required = false) String someString) {
     return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
   }
 

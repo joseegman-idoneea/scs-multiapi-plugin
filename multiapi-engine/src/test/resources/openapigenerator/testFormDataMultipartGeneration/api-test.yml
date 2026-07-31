@@ -22,6 +22,11 @@ paths:
                 someFile:
                   type: string
                   format: binary
+                someFiles:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
 
       responses:
         '200':
