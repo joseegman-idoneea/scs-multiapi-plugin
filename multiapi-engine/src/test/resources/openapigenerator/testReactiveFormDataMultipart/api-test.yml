@@ -1,0 +1,33 @@
+openapi: 3.0.2
+info:
+  title: Testing reactive multipart file upload
+  version: 1.0.0
+servers:
+- url: http://localhost/v1
+paths:
+  /upload:
+    post:
+      tags:
+      - test
+      operationId: uploadMultipart
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                someString:
+                  type: string
+                someFile:
+                  type: string
+                  format: binary
+                someFiles:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description:
+            OK
