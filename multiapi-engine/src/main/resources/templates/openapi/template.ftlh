@@ -3,9 +3,28 @@ package <#if packageApi??>${packageApi}<#elseif package??> ${package}</#if>;
 
 <#assign imports=[]>
 <#assign model_imports=[]>
+<#assign needsMultipartFile=false>
 <#list pathObjects as path>
     <#list path.operationObjects as operation>
         <#list operation.requestObjects as request>
+            <#if request.isFormData>
+                <#list request.contentObjects as content>
+                    <#if content.schemaObject??>
+                        <#list content.schemaObject.fieldObjectList as field>
+                            <#if "${field.dataType}"?contains("MultipartFile")>
+                                <#assign needsMultipartFile=true>
+                            </#if>
+                        </#list>
+                    </#if>
+                </#list>
+            </#if>
+        </#list>
+    </#list>
+</#list>
+<#list pathObjects as path>
+    <#list path.operationObjects as operation>
+        <#list operation.requestObjects as request>
+            <#if !request.isFormData>
             <#list request.contentObjects as content>
                 <#if content.importName?? && (!imports?seq_contains(content.importName)) && (!model_imports?seq_contains(content.importName))>
                     <#if (!checkBasicTypes?seq_contains(content.importName))>
@@ -17,6 +36,7 @@ package <#if packageApi??>${packageApi}<#elseif package??> ${package}</#if>;
                     </#if>
                 </#if>
             </#list>
+            </#if>
         </#list>
         <#list operation.responseObjects as response>
             <#list response.contentObjects as content>
@@ -62,6 +82,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
+<#if needsMultipartFile>
+import org.springframework.web.multipart.MultipartFile;
+</#if>
 
 <#list model_imports as import>
 import <#if packageModel??>${packageModel}<#elseif package??>${package}</#if>.${import};
@@ -80,7 +103,7 @@ public interface ${className?cap_first}Api {
    *<#list path.parameterObjects as parameter> @param ${parameter.name} <#if parameter.description?has_content>${parameter.description} </#if>${parameter.required?c}</#list>
    </#if>
    <#if operation.requestObjects?has_content>
-   *<#list operation.requestObjects as request><#list request.contentObjects as content> @param ${content.dataType?api.getVariableNameString()}<#if content?has_next>, </#if></#list>${request.description! ""}<#if request.required == true> (required)</#if></#list>
+   *<#list operation.requestObjects as request><#if request.isFormData><#list request.contentObjects[0].schemaObject.fieldObjectList as part> @param ${part.baseName}</#list><#else><#list request.contentObjects as content> @param ${content.dataType?api.getVariableNameString()}<#if content?has_next>, </#if></#list></#if>${request.description! ""}<#if request.required == true> (required)</#if></#list>
    </#if>
    * @return<#list operation.responseObjects as response><#if response.responseName != "default">  ${response.description}; (status code ${response.responseName})</#if></#list></#if>
    */
@@ -97,15 +120,16 @@ public interface ${className?cap_first}Api {
   @RequestMapping(
     method = RequestMethod.${operation.operationType},
     value = "${path.pathName}",
-    produces = {"application/json"}
+    produces = {"application/json"}<#if operation.requestObjects?has_content && operation.requestObjects[0].isFormData>,
+    consumes = {MediaType.MULTIPART_FORM_DATA_VALUE}</#if>
   )
 
   default ResponseEntity<@compress single_line=true><#if operation.responseObjects[0].contentObjects[0]??>
     <${operation.responseObjects[0].contentObjects[0].dataType}<#else><Void</#if>></@compress> ${operation.operationId}(<@compress single_line=true>
     <#if operation.parameterObjects?has_content><#list operation.parameterObjects as parameter> @Parameter(name = "${parameter.name}", <#if parameter.description?has_content>description = "${parameter.description}", </#if>required = ${parameter.required?c}, schema = @Schema(description = "")) <#if parameter.in == "path"> @PathVariable("${parameter.name}") <#elseif parameter.in == "query"> @RequestParam(required = ${parameter.required?c}) </#if> ${parameter.dataType} ${parameter.name} <#if parameter?has_next || operation.requestObjects?has_content>, </#if></#list></#if>
     <#if path.parameterObjects?has_content><#list path.parameterObjects as parameter> @Parameter(name = "${parameter.name}", <#if parameter.description?has_content>description = "${parameter.description}", </#if>required = ${parameter.required?c}, schema = @Schema(description = "")) <#if parameter.in == "path"> @PathVariable("${parameter.name}") <#elseif parameter.in == "query"> @RequestParam(required = ${parameter.required?c}) </#if> ${parameter.dataType} ${parameter.name} <#if parameter?has_next || operation.requestObjects?has_content>, </#if></#list></#if>
-    <#if operation.requestObjects?has_content><#list operation.requestObjects as request> @Parameter(name = "${request.contentObjects[0].dataType?api.getVariableNameString()}", description = "${request.description! ""}", required = ${request.required?c}, schema = @Schema(description = "${request.contentObjects[0].description! ""}")) @Valid <#if request.isFormData == false>@RequestBody</#if>
-    ${request.contentObjects[0].dataType} ${request.contentObjects[0].dataType?api.getVariableNameString()} <#if request?has_next>, </#if></#list></#if></@compress>) {
+    <#if operation.requestObjects?has_content><#list operation.requestObjects as request><#if request.isFormData><#list request.contentObjects[0].schemaObject.fieldObjectList as part> @Parameter(name = "${part.baseName}", required = ${part.required?c}, schema = @Schema(description = "")) @RequestPart(value = "${part.baseName}", required = ${part.required?c}) ${part.dataType} ${part.baseName} <#if part?has_next || request?has_next>, </#if></#list><#else> @Parameter(name = "${request.contentObjects[0].dataType?api.getVariableNameString()}", description = "${request.description! ""}", required = ${request.required?c}, schema = @Schema(description = "${request.contentObjects[0].description! ""}")) @Valid @RequestBody
+    ${request.contentObjects[0].dataType} ${request.contentObjects[0].dataType?api.getVariableNameString()} <#if request?has_next>, </#if></#if></#list></#if></@compress>) {
     return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
   }
   </#list>

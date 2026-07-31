@@ -207,6 +207,11 @@ public class OpenApiUtil {
   private static void processRequestBody(final HashMap<String, JsonNode> basicJsonNodeMap, final JsonNode operation, SpecFile specFile) {
     if (ApiTool.hasNode(operation, "requestBody") && !operation.at("/requestBody/content").isMissingNode()) {
       final var content = operation.at("/requestBody/content");
+      if (content.has("multipart/form-data")) {
+        // multipart parts are exposed individually as @RequestPart parameters,
+        // so no wrapper model is generated for them.
+        return;
+      }
       final var schema = content.findValue("schema");
       if (!ApiTool.hasRef(schema)) {
         basicJsonNodeMap.put(StringCaseUtils.titleToSnakeCase(MapperUtil.getPojoName("InlineObject" + StringUtils.capitalize(getOperationId(operation)), specFile)), schema);
