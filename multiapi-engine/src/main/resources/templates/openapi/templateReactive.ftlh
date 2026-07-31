@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Flux;
 import springfox.documentation.annotations.ApiIgnore;
 <#assign needsFilePart=false>
+<#assign needsResource=false>
 <#list pathObjects as path>
   <#list path.operationObjects as operation>
     <#list operation.requestObjects as request>
@@ -37,11 +38,26 @@ import springfox.documentation.annotations.ApiIgnore;
           </#if>
         </#list>
       </#if>
+      <#list request.contentObjects as content>
+        <#if content.dataType.containsType("resource")>
+          <#assign needsResource=true>
+        </#if>
+      </#list>
+    </#list>
+    <#list operation.responseObjects as response>
+      <#list response.contentObjects as content>
+        <#if content.dataType.containsType("resource")>
+          <#assign needsResource=true>
+        </#if>
+      </#list>
     </#list>
   </#list>
 </#list>
 <#if needsFilePart>
 import org.springframework.http.codec.multipart.FilePart;
+</#if>
+<#if needsResource>
+import org.springframework.core.io.Resource;
 </#if>
 
 <#assign imports=[]>

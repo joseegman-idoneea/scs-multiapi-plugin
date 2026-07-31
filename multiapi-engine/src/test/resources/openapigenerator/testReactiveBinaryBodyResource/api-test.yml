@@ -1,0 +1,23 @@
+openapi: 3.0.2
+info:
+  title: Testing reactive raw binary request body
+  version: 1.0.0
+servers:
+- url: http://localhost/v1
+paths:
+  /upload:
+    post:
+      tags:
+      - test
+      operationId: uploadBinary
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description:
+            OK

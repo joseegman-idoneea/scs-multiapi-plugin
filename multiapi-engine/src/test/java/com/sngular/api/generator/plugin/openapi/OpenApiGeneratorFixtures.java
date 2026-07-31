@@ -86,6 +86,16 @@ public final class OpenApiGeneratorFixtures {
 					.apiPackage("com.sngular.multifileplugin.testreactiveformdatamultipart")
 					.useLombokModelAnnotation(false).isReactive(true).build());
 
+	static final List<SpecFile> TEST_BINARY_BODY_RESOURCE = List
+			.of(SpecFile.builder().filePath("openapigenerator/testBinaryBodyResource/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.testbinarybodyresource")
+					.useLombokModelAnnotation(false).build());
+
+	static final List<SpecFile> TEST_REACTIVE_BINARY_BODY_RESOURCE = List
+			.of(SpecFile.builder().filePath("openapigenerator/testReactiveBinaryBodyResource/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.testreactivebinarybodyresource")
+					.useLombokModelAnnotation(false).isReactive(true).build());
+
 	static final List<SpecFile> TEST_API_TAGS_GENERATION = List
 			.of(SpecFile.builder().filePath("openapigenerator/testApiTagsGeneration/api-tags-test.yml")
 					.apiPackage("com.sngular.multifileplugin.tagsgeneration")
@@ -605,6 +615,38 @@ public final class OpenApiGeneratorFixtures {
 		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
 				DEFAULT_MODEL_API, Collections.emptyList(), null);
 
+	}
+
+	static Function<Path, Boolean> validateBinaryBodyResource() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/testbinarybodyresource";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/testbinarybodyresource/model";
+
+		final String COMMON_PATH = "openapigenerator/testBinaryBodyResource/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "UploadApi.java");
+
+		return path -> commonTest(path, expectedTestApiFile, Collections.emptyList(), DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
+	}
+
+	static Function<Path, Boolean> validateReactiveBinaryBodyResource() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/testreactivebinarybodyresource";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/testreactivebinarybodyresource/model";
+
+		final String COMMON_PATH = "openapigenerator/testReactiveBinaryBodyResource/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "UploadApi.java");
+
+		return path -> commonTest(path, expectedTestApiFile, Collections.emptyList(), DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
 	}
 
 	static Function<Path, Boolean> validateReactiveFormDataMultipart() {
