@@ -493,10 +493,11 @@ public final class ModelBuilder {
                                      .dataType(SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, MapperUtil.getPojoName(fieldName, specFile)))
                                      .build());
       } else {
+        final String itemType = ApiTool.isBinary(items) ? TypeConstants.MULTIPART_FILE : MapperUtil.getSimpleType(items, specFile);
         final SchemaFieldObject field = SchemaFieldObject
                                             .builder()
                                             .baseName(fieldName)
-                                            .dataType(SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, MapperUtil.getSimpleType(items, specFile)))
+                                            .dataType(SchemaFieldObjectType.fromTypeList(TypeConstants.ARRAY, itemType))
                                             .build();
         fieldObjectArrayList.add(field);
         addPropertiesToFieldObject(field, schema);
