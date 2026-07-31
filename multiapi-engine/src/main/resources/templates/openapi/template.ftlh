@@ -4,6 +4,7 @@ package <#if packageApi??>${packageApi}<#elseif package??> ${package}</#if>;
 <#assign imports=[]>
 <#assign model_imports=[]>
 <#assign needsMultipartFile=false>
+<#assign needsResource=false>
 <#list pathObjects as path>
     <#list path.operationObjects as operation>
         <#list operation.requestObjects as request>
@@ -18,6 +19,18 @@ package <#if packageApi??>${packageApi}<#elseif package??> ${package}</#if>;
                     </#if>
                 </#list>
             </#if>
+            <#list request.contentObjects as content>
+                <#if content.dataType.containsType("resource")>
+                    <#assign needsResource=true>
+                </#if>
+            </#list>
+        </#list>
+        <#list operation.responseObjects as response>
+            <#list response.contentObjects as content>
+                <#if content.dataType.containsType("resource")>
+                    <#assign needsResource=true>
+                </#if>
+            </#list>
         </#list>
     </#list>
 </#list>
@@ -84,6 +97,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.NativeWebRequest;
 <#if needsMultipartFile>
 import org.springframework.web.multipart.MultipartFile;
+</#if>
+<#if needsResource>
+import org.springframework.core.io.Resource;
 </#if>
 
 <#list model_imports as import>

@@ -473,6 +473,11 @@ public class MapperPathUtil {
   private static SchemaFieldObjectType getObjectOrType(
       final JsonNode schema, final String pojoName, final SpecFile specFile, final GlobalObject globalObject,
       final Path baseDir) {
+    if (ApiTool.isBinary(schema)) {
+      // A raw binary body (e.g. application/octet-stream, type: string + format: binary,
+      // not wrapped in a multipart object) maps to a streaming Resource, not String.
+      return new SchemaFieldObjectType(TypeConstants.RESOURCE);
+    }
     return switch (ApiTool.getType(schema)) {
       case TypeConstants.OBJECT -> SchemaFieldObjectType.fromTypeList(TypeConstants.OBJECT, pojoName);
       case TypeConstants.INTEGER -> new SchemaFieldObjectType(getIntegerFormat(schema));

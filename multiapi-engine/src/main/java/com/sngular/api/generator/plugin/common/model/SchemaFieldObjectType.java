@@ -38,7 +38,8 @@ public class SchemaFieldObjectType {
       new SimpleImmutableEntry<>(TypeConstants.ZONEDDATETIME, ZONED_DATE_TIME),
       new SimpleImmutableEntry<>(TypeConstants.OFFSETDATE, OFFSET_DATE_TIME),
       new SimpleImmutableEntry<>(TypeConstants.OFFSETDATETIME, OFFSET_DATE_TIME),
-      new SimpleImmutableEntry<>(TypeConstants.MULTIPART_FILE, "MultipartFile")
+      new SimpleImmutableEntry<>(TypeConstants.MULTIPART_FILE, "MultipartFile"),
+      new SimpleImmutableEntry<>(TypeConstants.RESOURCE, "Resource")
                                                                         );
 
   private static final Map<String, String> IMPORT_TYPE_MAPPINGS = Map.ofEntries(
@@ -53,7 +54,8 @@ public class SchemaFieldObjectType {
       new SimpleImmutableEntry<>(TypeConstants.ZONEDDATETIME, "java.time." + ZONED_DATE_TIME),
       new SimpleImmutableEntry<>(TypeConstants.OFFSETDATE, "java.time." + OFFSET_DATE_TIME),
       new SimpleImmutableEntry<>(TypeConstants.OFFSETDATETIME, "java.time." + OFFSET_DATE_TIME),
-      new SimpleImmutableEntry<>(TypeConstants.MULTIPART_FILE, "MultipartFile")
+      new SimpleImmutableEntry<>(TypeConstants.MULTIPART_FILE, "MultipartFile"),
+      new SimpleImmutableEntry<>(TypeConstants.RESOURCE, "org.springframework.core.io.Resource")
                                                                                );
 
   private static final Map<String, String> IMPL_TYPE_MAPPINGS = Map.ofEntries(
@@ -73,7 +75,8 @@ public class SchemaFieldObjectType {
       new SimpleImmutableEntry<>(TypeConstants.ZONEDDATETIME, ZONED_DATE_TIME),
       new SimpleImmutableEntry<>(TypeConstants.OFFSETDATE, OFFSET_DATE_TIME),
       new SimpleImmutableEntry<>(TypeConstants.OFFSETDATETIME, OFFSET_DATE_TIME),
-      new SimpleImmutableEntry<>(TypeConstants.MULTIPART_FILE, "MultipartFile")
+      new SimpleImmutableEntry<>(TypeConstants.MULTIPART_FILE, "MultipartFile"),
+      new SimpleImmutableEntry<>(TypeConstants.RESOURCE, "Resource")
                                                                              );
 
   private final String baseType;

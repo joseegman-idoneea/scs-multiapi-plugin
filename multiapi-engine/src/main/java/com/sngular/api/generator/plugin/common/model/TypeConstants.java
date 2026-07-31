@@ -56,6 +56,8 @@ public final class TypeConstants {
 
   public static final String MULTIPART_FILE = "multipartfile";
 
+  public static final String RESOURCE = "resource";
+
   public static final Set<String> BASIC_OBJECT_TYPE = Set.of(NUMBER, STRING, BOOLEAN, INTEGER, ARRAY);
 
   public static final Set<String> NO_IMPORT_TYPE = Set.of(STRING, INTEGER, OBJECT);
@@ -94,7 +96,8 @@ public final class TypeConstants {
       ZONEDDATETIME,
       OFFSETDATE,
       OFFSETDATETIME,
-      MULTIPART_FILE
+      MULTIPART_FILE,
+      RESOURCE
                                                     );
 
   private TypeConstants() {
