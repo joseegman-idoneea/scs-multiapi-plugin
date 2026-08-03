@@ -105,6 +105,19 @@ public class TemplateFactory extends CommonTemplateFactory {
     }
   }
 
+  public final void calculateJacksonPackage(final Integer springBootVersion) {
+    // Spring Boot 4 (Spring Framework 7) ships Jackson 3, which relocated its databind/core
+    // packages from com.fasterxml.jackson to tools.jackson. Jackson annotations keep the old
+    // coordinates, so only the databind package is switched here.
+    if (4 <= springBootVersion) {
+      addToRoot("jacksonPackage", "tools.jackson");
+      addToRoot("isJackson3", Boolean.TRUE);
+    } else {
+      addToRoot("jacksonPackage", "com.fasterxml.jackson");
+      addToRoot("isJackson3", Boolean.FALSE);
+    }
+  }
+
   public final void setPackageName(final String packageName) {
     addToRoot("package", packageName);
   }

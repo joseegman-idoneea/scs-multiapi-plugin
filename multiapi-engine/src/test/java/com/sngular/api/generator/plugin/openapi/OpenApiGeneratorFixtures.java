@@ -818,6 +818,50 @@ public final class OpenApiGeneratorFixtures {
 						CLIENT_MODEL_API, Collections.emptyList(), null);
 	}
 
+	static Function<Path, Boolean> validateRestClientGenerationSpringBoot4() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/restclient";
+
+		final String CLIENT_TARGET_API = "generated/com/sngular/multifileplugin/restclient/client";
+
+		final String CLIENT_AUTH_API = "generated/com/sngular/multifileplugin/restclient/client/auth";
+
+		final String MODEL_TARGET_API = "generated/com/sngular/multifileplugin/restclient/model";
+
+		final String COMMON_PATH = "openapigenerator/testRestClientApiGeneration/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/springboot4/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "TestApi.java");
+
+		final List<String> expectedTestClientApiFile = List.of(ASSETS_PATH + "client/ApiRestClient.java");
+
+		final List<String> expectedTestClientAuthModelFiles = List.of(ASSETS_PATH + "client/auth/Authentication.java",
+				ASSETS_PATH + "client/auth/HttpBasicAuth.java");
+
+		final List<String> expectedModelFiles = List.of(ASSETS_PATH + "model/ApiErrorDTO.java",
+				ASSETS_PATH + "model/ApiTestDTO.java", ASSETS_PATH + "model/ApiTestInfoDTO.java");
+
+		return path -> commonTest(path, expectedTestApiFile, expectedModelFiles, DEFAULT_TARGET_API, MODEL_TARGET_API,
+				Collections.emptyList(), null)
+				&& commonTest(path, expectedTestClientApiFile, expectedTestClientAuthModelFiles, CLIENT_TARGET_API,
+						CLIENT_AUTH_API, Collections.emptyList(), null);
+	}
+
+	static Function<Path, Boolean> validateWebClientGenerationSpringBoot4() {
+
+		final String CLIENT_TARGET_API = "generated/com/sngular/apigenerator/openapi/client";
+
+		final String COMMON_PATH = "openapigenerator/testWebClientApiGeneration/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/springboot4/";
+
+		final List<String> expectedClientFile = List.of(ASSETS_PATH + "client/ApiWebClient.java");
+
+		return path -> commonTest(path, expectedClientFile, Collections.emptyList(), CLIENT_TARGET_API, null,
+				Collections.emptyList(), null);
+	}
+
 	static Function<Path, Boolean> validateRestClientWithRequestBodyGeneration() {
 
 		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/restclientWithRequestObjects";

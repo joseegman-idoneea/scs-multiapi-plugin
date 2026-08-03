@@ -1,4 +1,4 @@
-package ${packageClient};
+package com.sngular.apigenerator.openapi.client;
 
 import java.text.DateFormat;
 import java.text.FieldPosition;
@@ -16,29 +16,17 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TimeZone;
 
-import ${jacksonPackage}.databind.DeserializationFeature;
-<#if isJackson3>
-import ${jacksonPackage}.databind.json.JsonMapper;
-<#else>
-import ${jacksonPackage}.databind.ObjectMapper;
-</#if>
-import ${jacksonPackage}.databind.util.StdDateFormat;
-<#if !isJackson3>
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-</#if>
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.util.StdDateFormat;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpRequest;
-<#if isJackson3>
 import org.springframework.http.codec.json.JacksonJsonDecoder;
 import org.springframework.http.codec.json.JacksonJsonEncoder;
-<#else>
-import org.springframework.http.codec.json.Jackson2JsonDecoder;
-import org.springframework.http.codec.json.Jackson2JsonEncoder;
-</#if>
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
@@ -51,8 +39,7 @@ import org.springframework.web.reactive.function.client.WebClient.ResponseSpec;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.stereotype.Component;
 
-import ${packageAuth}.Authentication;
-<#assign mapperType = (isJackson3!false)?then("JsonMapper", "ObjectMapper")>
+import com.sngular.apigenerator.openapi.client.auth.Authentication;
 
 @Component
 public class ApiWebClient {
@@ -73,7 +60,7 @@ public class ApiWebClient {
   private MultiValueMap<String, String> defaultCookies = new LinkedMultiValueMap<String, String>();
   private final WebClient webClient;
   private final DateFormat dateFormat;
-  private final ${mapperType} objectMapper;
+  private final JsonMapper objectMapper;
   private Map<String, Authentication> authentications;
 
   public ApiWebClient() {
@@ -117,35 +104,22 @@ public class ApiWebClient {
     return dateFormat;
   }
 
-  private static ${mapperType} createDefaultObjectMapper(final DateFormat dateFormat) {
+  private static JsonMapper createDefaultObjectMapper(final DateFormat dateFormat) {
     if (null == dateFormat) {
      dateFormat = createDefaultDateFormat();
     }
-<#if isJackson3>
     return JsonMapper.builder()
         .defaultDateFormat(dateFormat)
         .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
         .build();
-<#else>
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.setDateFormat(dateFormat);
-    mapper.registerModule(new JavaTimeModule());
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    return mapper;
-</#if>
   }
 
-  private static WebClient buildWebClient(final ${mapperType} mapper) {
+  private static WebClient buildWebClient(final JsonMapper mapper) {
     ExchangeStrategies strategies = ExchangeStrategies
       .builder()
       .codecs(clientDefaultCodecsConfigurer -> {
-<#if isJackson3>
         clientDefaultCodecsConfigurer.defaultCodecs().jacksonJsonEncoder(new JacksonJsonEncoder(mapper, MediaType.APPLICATION_JSON));
         clientDefaultCodecsConfigurer.defaultCodecs().jacksonJsonDecoder(new JacksonJsonDecoder(mapper, MediaType.APPLICATION_JSON));
-<#else>
-        clientDefaultCodecsConfigurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(mapper, MediaType.APPLICATION_JSON));
-        clientDefaultCodecsConfigurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(mapper, MediaType.APPLICATION_JSON));
-</#if>
       }).build();
     WebClient.Builder webClientBuilder = WebClient.builder().exchangeStrategies(strategies);
     return webClientBuilder.build();
