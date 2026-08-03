@@ -70,7 +70,9 @@ jobs:
       - name: Build Gradle Plugin
         run: |
           cd scs-multiapi-gradle-plugin
-          gradle wrapper
+          # Use the committed Gradle wrapper (pinned version). Running `gradle wrapper`
+          # here would regenerate it against the runner's system Gradle (currently 9.x),
+          # which is incompatible with the shadow plugin used by this build.
           chmod +x gradlew
           ./gradlew build
 
