@@ -770,7 +770,8 @@ Setting `springBootVersion` to `4` (or higher) targets Spring Boot 4
 When this is set, the generated code changes as follows:
 
 - Jackson `databind` imports are emitted under `tools.jackson.*` instead of
-  `com.fasterxml.jackson.*` (e.g. `tools.jackson.databind.annotation.JsonDeserialize`).
+  `com.fasterxml.jackson.*` (e.g.
+  `tools.jackson.databind.annotation.JsonDeserialize`).
 - Jackson **annotations** keep their original coordinates
   (`com.fasterxml.jackson.annotation.*`, such as `@JsonProperty`), matching
   Jackson 3's own packaging.
@@ -779,11 +780,12 @@ When this is set, the generated code changes as follows:
   the reactive WebClient uses the Spring Framework 7 codecs
   (`JacksonJsonEncoder`/`JacksonJsonDecoder`).
 
-For `springBootVersion < 4` the output is unchanged and keeps targeting Jackson 2.
+For `springBootVersion < 4` the output is unchanged and keeps targeting
+Jackson 2.
 
-> **Note:** Lombok-annotated models (`useLombokModelAnnotation`) rely on Lombok's
-> `@Jacksonized`, which does not yet support Jackson 3. Combining Lombok models
-> with `springBootVersion = 4` is therefore not supported.
+> **Note:** Lombok-annotated models (`useLombokModelAnnotation`) rely on
+> Lombok's `@Jacksonized`, which does not yet support Jackson 3. Combining
+> Lombok models with `springBootVersion = 4` is therefore not supported.
 
 ### Usage considerations
 
