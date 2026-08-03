@@ -67,6 +67,8 @@ class OpenApiGeneratorTest {
             OpenApiGeneratorFixtures.validateReactiveFormDataMultipart()),
         Arguments.of("testBinaryBodyResource", OpenApiGeneratorFixtures.TEST_BINARY_BODY_RESOURCE,
             OpenApiGeneratorFixtures.validateBinaryBodyResource()),
+        Arguments.of("testModelPackageDefault", OpenApiGeneratorFixtures.TEST_MODEL_PACKAGE_DEFAULT,
+            OpenApiGeneratorFixtures.validateModelPackageDefault()),
         Arguments.of("testReactiveBinaryBodyResource", OpenApiGeneratorFixtures.TEST_REACTIVE_BINARY_BODY_RESOURCE,
             OpenApiGeneratorFixtures.validateReactiveBinaryBodyResource()),
         Arguments.of("testApiTagsGeneration", OpenApiGeneratorFixtures.TEST_API_TAGS_GENERATION,

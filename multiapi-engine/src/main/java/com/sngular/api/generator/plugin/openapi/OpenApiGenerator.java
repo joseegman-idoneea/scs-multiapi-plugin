@@ -115,6 +115,13 @@ public class OpenApiGenerator {
     }
 
     templateFactory.calculateJavaEEPackage(springBootVersion);
+    // Resolve the model package up front so the API interface imports models from the same
+    // package they are actually written to (the interface is rendered before the models).
+    // Only when a package can be derived from the spec (explicit modelPackage, or apiPackage);
+    // otherwise the legacy default resolution is preserved untouched.
+    if (StringUtils.isNotBlank(specFile.getApiPackage()) || StringUtils.isNotBlank(specFile.getModelPackage())) {
+      templateFactory.setModelPackageName(processModelPackage(specFile.getApiPackage(), specFile.getModelPackage()));
+    }
     final var globalObject = createApiTemplate(specFile, openAPI);
 
     createModelTemplate(specFile, openAPI, globalObject);
@@ -165,7 +172,7 @@ public class OpenApiGenerator {
   }
 
   private void createModelTemplate(final SpecFile specFile, final JsonNode openAPI, final GlobalObject globalObject) {
-    final var modelPackage = processModelPackage(specFile.getModelPackage());
+    final var modelPackage = processModelPackage(specFile.getApiPackage(), specFile.getModelPackage());
 
     final var totalSchemas = OpenApiUtil.processPaths(openAPI, globalObject.getSchemaMap(), specFile);
     templateFactory.setModelPackageName(modelPackage);
@@ -197,10 +204,12 @@ public class OpenApiGenerator {
     }
   }
 
-  private String processModelPackage(final String modelPackage) {
-    var modelReturnPackage = "";
+  private String processModelPackage(final String apiPackage, final String modelPackage) {
+    final String modelReturnPackage;
     if (StringUtils.isNotBlank(modelPackage)) {
       modelReturnPackage = modelPackage.trim();
+    } else if (StringUtils.isNotBlank(apiPackage)) {
+      modelReturnPackage = apiPackage.trim() + ".model";
     } else if (groupId != null) {
       modelReturnPackage = groupId + ".model";
     } else {
@@ -256,10 +265,16 @@ public class OpenApiGenerator {
     final String parentPackage = modelPackage.substring(modelPackage.lastIndexOf(".") + 1);
     final var schemaObjectIt = MapperContentUtil
                                    .mapComponentToSchemaObject(basicSchemaMap, schemaName, model, parentPackage, specFile, this.baseDir).iterator();
+    // Write to the resolved model package only when it is derivable from the spec (explicit
+    // modelPackage or apiPackage); otherwise keep the legacy default (raw modelPackage, which
+    // the writer defaults to the plugin's base package).
+    final String writeModelPackage =
+        StringUtils.isNotBlank(specFile.getModelPackage()) || StringUtils.isNotBlank(specFile.getApiPackage())
+            ? modelPackage : specFile.getModelPackage();
     if (schemaObjectIt.hasNext()) {
-      writeSchemaObject(specFile.isUseLombokModelAnnotation(), specFile.getModelPackage(), schemaName, schemaObjectIt.next());
+      writeSchemaObject(specFile.isUseLombokModelAnnotation(), writeModelPackage, schemaName, schemaObjectIt.next());
     }
-    schemaObjectIt.forEachRemaining(schemaObj -> writeSchemaObject(specFile.isUseLombokModelAnnotation(), specFile.getModelPackage(), null, schemaObj));
+    schemaObjectIt.forEachRemaining(schemaObj -> writeSchemaObject(specFile.isUseLombokModelAnnotation(), writeModelPackage, null, schemaObj));
 
   }
 

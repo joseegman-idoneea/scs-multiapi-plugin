@@ -91,6 +91,11 @@ public final class OpenApiGeneratorFixtures {
 					.apiPackage("com.sngular.multifileplugin.testbinarybodyresource")
 					.useLombokModelAnnotation(false).build());
 
+	static final List<SpecFile> TEST_MODEL_PACKAGE_DEFAULT = List
+			.of(SpecFile.builder().filePath("openapigenerator/testModelPackageDefault/api-test.yml")
+					.apiPackage("com.sngular.multifileplugin.testmodelpackagedefault")
+					.useLombokModelAnnotation(false).build());
+
 	static final List<SpecFile> TEST_REACTIVE_BINARY_BODY_RESOURCE = List
 			.of(SpecFile.builder().filePath("openapigenerator/testReactiveBinaryBodyResource/api-test.yml")
 					.apiPackage("com.sngular.multifileplugin.testreactivebinarybodyresource")
@@ -615,6 +620,24 @@ public final class OpenApiGeneratorFixtures {
 		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
 				DEFAULT_MODEL_API, Collections.emptyList(), null);
 
+	}
+
+	static Function<Path, Boolean> validateModelPackageDefault() {
+
+		final String DEFAULT_TARGET_API = "generated/com/sngular/multifileplugin/testmodelpackagedefault";
+
+		final String DEFAULT_MODEL_API = "generated/com/sngular/multifileplugin/testmodelpackagedefault/model";
+
+		final String COMMON_PATH = "openapigenerator/testModelPackageDefault/";
+
+		final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+		final List<String> expectedTestApiFile = List.of(ASSETS_PATH + "ThingApi.java");
+
+		final List<String> expectedTestApiModelFiles = List.of(ASSETS_PATH + "Thing.java");
+
+		return path -> commonTest(path, expectedTestApiFile, expectedTestApiModelFiles, DEFAULT_TARGET_API,
+				DEFAULT_MODEL_API, Collections.emptyList(), null);
 	}
 
 	static Function<Path, Boolean> validateBinaryBodyResource() {
