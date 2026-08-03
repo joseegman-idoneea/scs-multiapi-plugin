@@ -92,6 +92,9 @@ abstract class OpenApiTask extends DefaultTask {
     if (openApiSpecFile.isReactive) {
       builder.isReactive(openApiSpecFile.isReactive)
     }
+    if (openApiSpecFile.useTimeType) {
+      builder.useTimeType(openApiSpecFile.useTimeType)
+    }
 
     return builder.build()
   }

@@ -6,6 +6,8 @@
 
 package com.sngular.api.generator.plugin.model
 
+import com.sngular.api.generator.plugin.common.model.TypeConstants
+
 class OpenApiSpecFile {
 
   String filePath
@@ -27,5 +29,7 @@ class OpenApiSpecFile {
   Boolean useLombokModelAnnotation
 
   Boolean isReactive
+
+  TypeConstants.TimeType useTimeType
 
 }
