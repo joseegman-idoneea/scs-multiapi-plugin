@@ -1,6 +1,5 @@
 package com.sngular.multifileplugin.testCoconutSchema;
 
-import java.lang.String;
 import java.util.Optional;
 import java.util.List;
 import java.util.Map;
