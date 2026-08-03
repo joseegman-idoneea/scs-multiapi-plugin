@@ -80,8 +80,8 @@ package ${packageModel};
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import ${jacksonPackage}.databind.annotation.JsonDeserialize;
+import ${jacksonPackage}.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 <#list schema.fieldObjectList as field>
   <#if field.enumValues?has_content>

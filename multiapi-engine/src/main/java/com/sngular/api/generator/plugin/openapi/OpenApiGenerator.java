@@ -115,6 +115,7 @@ public class OpenApiGenerator {
     }
 
     templateFactory.calculateJavaEEPackage(springBootVersion);
+    templateFactory.calculateJacksonPackage(springBootVersion);
     // Resolve the model package up front so the API interface imports models from the same
     // package they are actually written to (the interface is rendered before the models).
     // Only when a package can be derived from the spec (explicit modelPackage, or apiPackage);

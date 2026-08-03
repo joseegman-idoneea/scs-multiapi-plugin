@@ -247,6 +247,7 @@ public abstract class BaseAsyncApiHandler {
 
   protected void processJavaEEPackage(final Integer springBootVersion) {
     templateFactory.calculateJavaEEPackage(springBootVersion);
+    templateFactory.calculateJacksonPackage(springBootVersion);
   }
 
   protected String evaluatePackage(final OperationParameterObject operation) {

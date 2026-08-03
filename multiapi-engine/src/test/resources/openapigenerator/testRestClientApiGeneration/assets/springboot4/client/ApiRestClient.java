@@ -1,4 +1,4 @@
-package ${packageClient};
+package com.sngular.multifileplugin.restclient.client;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,16 +26,9 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.TimeZone;
 
-import ${jacksonPackage}.databind.DeserializationFeature;
-<#if isJackson3>
-import ${jacksonPackage}.databind.json.JsonMapper;
-<#else>
-import ${jacksonPackage}.databind.ObjectMapper;
-</#if>
-import ${jacksonPackage}.databind.util.StdDateFormat;
-<#if !isJackson3>
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-</#if>
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.util.StdDateFormat;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -61,15 +54,10 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
-<#if isJackson3>
 import org.springframework.http.converter.json.AbstractJacksonHttpMessageConverter;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
-<#else>
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
-</#if>
 
-import ${packageAuth}.Authentication;
+import com.sngular.multifileplugin.restclient.client.auth.Authentication;
 
 @Component
 public class ApiRestClient {
@@ -132,7 +120,6 @@ public class ApiRestClient {
     return dateFormat;
   }
 
-<#if isJackson3>
   private static JsonMapper createDefaultObjectMapper(final DateFormat defaultDateFormat) {
     DateFormat dateFormat = defaultDateFormat;
     if (Objects.isNull(defaultDateFormat)) {
@@ -152,29 +139,6 @@ public class ApiRestClient {
     restTemplate.setRequestFactory(new BufferingClientHttpRequestFactory(restTemplate.getRequestFactory()));
     return restTemplate;
   }
-<#else>
-  private static void createDefaultObjectMapper(final DateFormat defaultDateFormat, final AbstractJackson2HttpMessageConverter converter) {
-    DateFormat dateFormat = defaultDateFormat;
-    if (Objects.isNull(defaultDateFormat)) {
-      dateFormat = createDefaultDateFormat();
-    }
-    final ObjectMapper mapper = converter.getObjectMapper();
-    mapper.setDateFormat(dateFormat);
-    mapper.registerModule(new JavaTimeModule());
-    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-  }
-
-  protected RestTemplate buildRestTemplate() {
-    final RestTemplate restTemplate = new RestTemplate();
-    for(HttpMessageConverter converter:restTemplate.getMessageConverters()) {
-      if(converter instanceof AbstractJackson2HttpMessageConverter) {
-        createDefaultObjectMapper(this.dateFormat, (AbstractJackson2HttpMessageConverter) converter);
-      }
-    }
-    restTemplate.setRequestFactory(new BufferingClientHttpRequestFactory(restTemplate.getRequestFactory()));
-    return restTemplate;
-  }
-</#if>
 
   public ApiRestClient addDefaultHeader(final String name, final String value) {
     if (defaultHeaders.containsKey(name)) {
