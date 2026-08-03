@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sngular.api.generator.plugin.common.model.TypeConstants;
 import com.sngular.api.generator.plugin.model.OpenApiSpecFile;
+import com.sngular.api.generator.plugin.openapi.parameter.SpecFile;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.jupiter.api.Test;
@@ -38,8 +39,7 @@ class ScsMultiApiTest {
     specFile.setFilePath("api.yml");
     specFile.setUseTimeType(TypeConstants.TimeType.ZONED);
 
-    final com.sngular.api.generator.plugin.openapi.parameter.SpecFile result =
-        (com.sngular.api.generator.plugin.openapi.parameter.SpecFile) OpenApiTask.toFileSpec(specFile);
+    final SpecFile result = (SpecFile) OpenApiTask.toFileSpec(specFile);
 
     assertEquals(TypeConstants.TimeType.ZONED, result.getUseTimeType());
   }
@@ -49,8 +49,7 @@ class ScsMultiApiTest {
     final OpenApiSpecFile specFile = new OpenApiSpecFile();
     specFile.setFilePath("api.yml");
 
-    final com.sngular.api.generator.plugin.openapi.parameter.SpecFile result =
-        (com.sngular.api.generator.plugin.openapi.parameter.SpecFile) OpenApiTask.toFileSpec(specFile);
+    final SpecFile result = (SpecFile) OpenApiTask.toFileSpec(specFile);
 
     assertEquals(TypeConstants.TimeType.LOCAL, result.getUseTimeType());
   }
