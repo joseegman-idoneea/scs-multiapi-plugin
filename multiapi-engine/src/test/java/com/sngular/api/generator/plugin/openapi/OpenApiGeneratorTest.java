@@ -111,6 +111,8 @@ class OpenApiGeneratorTest {
             OpenApiGeneratorFixtures.validateNestedRefInAllOf()),
         Arguments.of("testNoContentResponses", OpenApiGeneratorFixtures.TEST_NO_CONTENT_RESPONSES,
             OpenApiGeneratorFixtures.validateNoContentResponses()),
+        Arguments.of("testExternalResponseRef", OpenApiGeneratorFixtures.TEST_EXTERNAL_RESPONSE_REF,
+            OpenApiGeneratorFixtures.validateExternalResponseRef()),
         Arguments.of("testExternalSchemaFileRef", OpenApiGeneratorFixtures.TEST_EXTERNAL_SCHEMA_FILE_REF,
             OpenApiGeneratorFixtures.validateExternalSchemaFileRef()),
         Arguments.of("testAnyOfInResponse", OpenApiGeneratorFixtures.TEST_ANY_OF_IN_RESPONSE,
