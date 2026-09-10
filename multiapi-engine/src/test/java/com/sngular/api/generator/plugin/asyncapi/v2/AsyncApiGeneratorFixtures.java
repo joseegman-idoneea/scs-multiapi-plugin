@@ -445,6 +445,26 @@ public class AsyncApiGeneratorFixtures {
                       .build())
               .build());
 
+  static final List<SpecFile> TEST_ISSUE_292_STREETLIGHTS =
+      List.of(
+          SpecFile.builder()
+              .filePath("asyncapigenerator/v2/testIssue292Streetlights/event-api.yml")
+              .consumer(
+                  OperationParameterObject.builder()
+                      .ids("turnOn,turnOff,dimLight")
+                      .modelNameSuffix("DTO")
+                      .apiPackage("com.sngular.scsplugin.streetlights.model.event.consumer")
+                      .modelPackage("com.sngular.scsplugin.streetlights.model.event")
+                      .build())
+              .supplier(
+                  OperationParameterObject.builder()
+                      .ids("receiveLightMeasurement")
+                      .modelNameSuffix("DTO")
+                      .apiPackage("com.sngular.scsplugin.streetlights.model.event.producer")
+                      .modelPackage("com.sngular.scsplugin.streetlights.model.event")
+                      .build())
+              .build());
+
   static final String TARGET = "target";
 
   static final String GENERATED = "generated/";
@@ -1255,5 +1275,69 @@ public class AsyncApiGeneratorFixtures {
             Collections.emptyList(),
             null)
             && modelTest(path, expectedConsumerModelSchemaFiles, DEFAULT_CONSUMER_MODEL_FOLDER);
+  }
+
+  static Function<Path, Boolean> validateTestIssue292Streetlights() {
+    final String DEFAULT_COMMON_FOLDER = "generated/com/sngular/scsplugin/streetlights/model/event";
+
+    final String DEFAULT_CONSUMER_FOLDER = DEFAULT_COMMON_FOLDER + "/consumer";
+
+    final String DEFAULT_PRODUCER_FOLDER = DEFAULT_COMMON_FOLDER + "/producer";
+
+    final String DEFAULT_CUSTOM_VALIDATOR_FOLDER = DEFAULT_COMMON_FOLDER + "/customvalidator";
+
+    final String COMMON_PATH = "asyncapigenerator/v2/testIssue292Streetlights/";
+
+    final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+    final List<String> expectedConsumerFiles =
+        List.of(
+            ASSETS_PATH + "consumer/Channels.java",
+            ASSETS_PATH + "consumer/IDimLight.java",
+            ASSETS_PATH + "consumer/ITurnOff.java",
+            ASSETS_PATH + "consumer/ITurnOn.java",
+            ASSETS_PATH + "consumer/Subscriber.java");
+
+    final List<String> expectedProducerFiles =
+        List.of(
+            ASSETS_PATH + "producer/IReceiveLightMeasurement.java",
+            ASSETS_PATH + "producer/Producer.java");
+
+    final List<String> expectedModelSchemaFiles =
+        List.of(
+            ASSETS_PATH + "DimLightPayloadDTO.java",
+            ASSETS_PATH + "LightMeasuredPayloadDTO.java",
+            ASSETS_PATH + "TurnOnOffPayloadDTO.java");
+
+    final List<String> expectedValidatorFiles =
+        List.of(
+            COMMON_PATH + "customvalidator/MaxBigDecimal.java",
+            COMMON_PATH + "customvalidator/MaxBigDecimalValidator.java",
+            COMMON_PATH + "customvalidator/MaxDouble.java",
+            COMMON_PATH + "customvalidator/MaxDoubleValidator.java",
+            COMMON_PATH + "customvalidator/MaxFloat.java",
+            COMMON_PATH + "customvalidator/MaxFloatValidator.java",
+            COMMON_PATH + "customvalidator/MaxInteger.java",
+            COMMON_PATH + "customvalidator/MaxIntegerValidator.java",
+            COMMON_PATH + "customvalidator/MinBigDecimal.java",
+            COMMON_PATH + "customvalidator/MinBigDecimalValidator.java",
+            COMMON_PATH + "customvalidator/MinDouble.java",
+            COMMON_PATH + "customvalidator/MinDoubleValidator.java",
+            COMMON_PATH + "customvalidator/MinFloat.java",
+            COMMON_PATH + "customvalidator/MinFloatValidator.java",
+            COMMON_PATH + "customvalidator/MinInteger.java",
+            COMMON_PATH + "customvalidator/MinIntegerValidator.java");
+
+    return path ->
+        commonTest(
+            path,
+            expectedConsumerFiles,
+            expectedProducerFiles,
+            DEFAULT_CONSUMER_FOLDER,
+            DEFAULT_PRODUCER_FOLDER,
+            Collections.emptyList(),
+            null)
+            && modelTest(path, expectedModelSchemaFiles, DEFAULT_COMMON_FOLDER)
+            && customValidatorTest(path, expectedValidatorFiles, DEFAULT_CUSTOM_VALIDATOR_FOLDER);
   }
 }
