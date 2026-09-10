@@ -58,6 +58,8 @@ public class TemplateFactory extends CommonTemplateFactory {
 
   private String subscribeClassName = null;
 
+  private boolean generateModelOnly = false;
+
   public TemplateFactory(
       boolean enableOverwrite,
       final File targetFolder,
@@ -67,6 +69,12 @@ public class TemplateFactory extends CommonTemplateFactory {
   }
 
   public final void fillTemplates() throws IOException {
+    if (generateModelOnly) {
+      generateTemplates();
+      cleanData();
+      return;
+    }
+
     addToRoot("publishMethods", publishMethods);
     addToRoot("subscribeMethods", subscribeMethods);
     addToRoot("streamBridgeMethods", streamBridgeMethods);
@@ -125,6 +133,10 @@ public class TemplateFactory extends CommonTemplateFactory {
       }
     }
     cleanData();
+  }
+
+  public final void setGenerateModelOnly(final boolean generateModelOnly) {
+    this.generateModelOnly = generateModelOnly;
   }
 
   public final void setSubscribePackageName(final String packageName) {

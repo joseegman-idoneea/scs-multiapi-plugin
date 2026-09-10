@@ -215,6 +215,7 @@ public abstract class BaseAsyncApiHandler {
     processClassNames(fileParameter);
     processEntitiesSuffix(fileParameter);
     processJavaEEPackage(springBootVersion);
+    templateFactory.setGenerateModelOnly(fileParameter.isGenerateModelOnly());
   }
 
   protected void processPackage(final SpecFile fileParameter) {
