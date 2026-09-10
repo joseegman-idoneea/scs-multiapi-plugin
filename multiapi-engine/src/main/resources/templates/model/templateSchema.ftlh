@@ -80,8 +80,11 @@ package ${packageModel};
 
 import java.util.Objects;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+<#if usePactAnnotation>
+import com.sngular.annotation.pact.PactDslBodyBuilder;
+</#if>
+import ${jacksonPackage}.databind.annotation.JsonDeserialize;
+import ${jacksonPackage}.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 <#list schema.fieldObjectList as field>
   <#if field.enumValues?has_content>
@@ -164,6 +167,9 @@ import ${packageModel}.customvalidator.UniqueItems;
 </#list>
 
 @JsonDeserialize(builder = ${schema.className}.${schema.className}Builder.class)
+<#if usePactAnnotation>
+@PactDslBodyBuilder
+</#if>
 public class ${schema.className} {
 
 <#list schema.fieldObjectList as field>

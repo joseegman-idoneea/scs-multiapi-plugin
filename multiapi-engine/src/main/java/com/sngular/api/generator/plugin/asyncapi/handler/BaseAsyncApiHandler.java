@@ -165,7 +165,7 @@ public abstract class BaseAsyncApiHandler {
 
   protected abstract void processSupplierMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
 
   protected abstract void processStreamBridgeMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent, final String channelName,
@@ -174,7 +174,7 @@ public abstract class BaseAsyncApiHandler {
 
   protected abstract void processSubscribeMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
 
   protected abstract void fillTemplateFactory(
       final String operationId,
@@ -215,6 +215,13 @@ public abstract class BaseAsyncApiHandler {
     processClassNames(fileParameter);
     processEntitiesSuffix(fileParameter);
     processJavaEEPackage(springBootVersion);
+    templateFactory.setGenerateModelOnly(fileParameter.isGenerateModelOnly());
+    templateFactory.setGenerateSpringwolfAnnotations(
+        isSpringwolf(fileParameter.getSupplier()) || isSpringwolf(fileParameter.getConsumer()) || isSpringwolf(fileParameter.getStreamBridge()));
+  }
+
+  private boolean isSpringwolf(final OperationParameterObject operation) {
+    return Objects.nonNull(operation) && operation.isGenerateSpringwolfAnnotations();
   }
 
   protected void processPackage(final SpecFile fileParameter) {
@@ -247,6 +254,7 @@ public abstract class BaseAsyncApiHandler {
 
   protected void processJavaEEPackage(final Integer springBootVersion) {
     templateFactory.calculateJavaEEPackage(springBootVersion);
+    templateFactory.calculateJacksonPackage(springBootVersion);
   }
 
   protected String evaluatePackage(final OperationParameterObject operation) {
@@ -284,9 +292,10 @@ public abstract class BaseAsyncApiHandler {
     return result;
   }
 
-  protected void writeSchemaObject(final boolean usingLombok, final String modelPackageReceived, final String keyClassName, final SchemaObject schemaObject) {
+  protected void writeSchemaObject(final boolean usingLombok, final boolean usingPact, final String modelPackageReceived, final String keyClassName,
+                                 final SchemaObject schemaObject) {
     final var destinationPackage = StringUtils.defaultIfEmpty(modelPackageReceived, DEFAULT_ASYNCAPI_API_PACKAGE + SLASH + schemaObject.getParentPackage());
-    templateFactory.addSchemaObject(modelPackageReceived, keyClassName, schemaObject, destinationPackage, usingLombok);
+    templateFactory.addSchemaObject(modelPackageReceived, keyClassName, schemaObject, destinationPackage, usingLombok, usingPact);
     templateFactory.checkRequiredOrCombinatorExists(schemaObject, usingLombok);
   }
 

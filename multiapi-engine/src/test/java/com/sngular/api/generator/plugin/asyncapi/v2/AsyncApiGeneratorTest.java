@@ -7,6 +7,8 @@
 package com.sngular.api.generator.plugin.asyncapi.v2;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
@@ -68,6 +70,10 @@ class AsyncApiGeneratorTest {
         Arguments.of("TestIssueInfiniteLoop", AsyncApiGeneratorFixtures.TEST_ISSUE_INFINITE_LOOP,
             AsyncApiGeneratorFixtures.validateTestIssueInfiniteLoop()),
         Arguments.of("TestCustomValidators", AsyncApiGeneratorFixtures.TEST_CUSTOM_VALIDATORS, AsyncApiGeneratorFixtures.validateCustomValidators(SPRING_BOOT_VERSION)),
+        Arguments.of("TestCustomValidatorsDifferentPackages", AsyncApiGeneratorFixtures.TEST_CUSTOM_VALIDATORS_DIFFERENT_PACKAGES,
+            AsyncApiGeneratorFixtures.validateCustomValidatorsDifferentPackages()),
+        Arguments.of("TestIssue248CustomValidators", AsyncApiGeneratorFixtures.TEST_ISSUE_248_GENERATION,
+            AsyncApiGeneratorFixtures.validateIssue248PackageFolderAlignment()),
         Arguments.of("TestModelClassExceptionGeneration", AsyncApiGeneratorFixtures.TEST_MODEL_CLASS_EXCEPTION_GENERATION,
             AsyncApiGeneratorFixtures.validateTestModelClassExceptionGeneration()),
         Arguments.of("TestNoSchemas", AsyncApiGeneratorFixtures.TEST_NO_SCHEMAS, AsyncApiGeneratorFixtures.validateNoSchemas()),
@@ -80,7 +86,9 @@ class AsyncApiGeneratorTest {
         Arguments.of("TestSubObjectSameName", AsyncApiGeneratorFixtures.TEST_SUB_OBJECT_SAME_NAME,
             AsyncApiGeneratorFixtures.validateTestSubObjectSameName()),
         Arguments.of("TestReferenceFromLocalIssue", AsyncApiGeneratorFixtures.TEST_REFERENCE_FROM_LOCAL_ISSUE,
-            AsyncApiGeneratorFixtures.validateTestReferenceFromLocalIssue()));
+            AsyncApiGeneratorFixtures.validateTestReferenceFromLocalIssue()),
+        Arguments.of("TestIssue292Streetlights", AsyncApiGeneratorFixtures.TEST_ISSUE_292_STREETLIGHTS,
+            AsyncApiGeneratorFixtures.validateTestIssue292Streetlights()));
   }
 
   @ParameterizedTest(name = "Test {index} - Process File Spec for case {0}")
@@ -91,8 +99,63 @@ class AsyncApiGeneratorTest {
   }
 
   @Test
+  void testGenerateSpringwolfAnnotations() throws IOException {
+    asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATE_SPRINGWOLF);
+
+    final Path target = Path.of(baseDir.toString(), "target", "generated/com/sngular/scsplugin/springwolf/model/event");
+
+    final Path subscriber = target.resolve("consumer/Subscriber.java");
+    final Path producer = target.resolve("producer/Producer.java");
+
+    Assertions.assertThat(subscriber).exists();
+    Assertions.assertThat(producer).exists();
+
+    final String subscriberContent = Files.readString(subscriber);
+    Assertions.assertThat(subscriberContent)
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncListener;")
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncOperation;")
+        .contains("@AsyncListener(operation = @AsyncOperation(channelName = \"order.created\", operationId = \"publishOperationFileGeneration\"))");
+
+    final String producerContent = Files.readString(producer);
+    Assertions.assertThat(producerContent)
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncPublisher;")
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncOperation;")
+        .contains("@AsyncPublisher(operation = @AsyncOperation(channelName = \"order.createCommand\", operationId = \"subscribeOperationFileGeneration\"))");
+  }
+
+  @Test
   void testExceptionForTestGenerationWithNoOperationId() {
     Assertions.assertThatThrownBy(() -> asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATION_WITH_NO_OPERATION_ID)).isInstanceOf(InvalidAPIException.class);
+  }
+
+  @Test
+  void testGenerateModelOnly() throws IOException {
+    asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATE_MODEL_ONLY);
+
+    final Path target = Path.of(baseDir.toString(), "target");
+    final Path modelFolder = target.resolve("generated/com/sngular/scsplugin/modelonly/model/event");
+    final Path consumerApiFolder = target.resolve("generated/com/sngular/scsplugin/modelonly/model/event/consumer");
+    final Path producerApiFolder = target.resolve("generated/com/sngular/scsplugin/modelonly/model/event/producer");
+
+    Assertions.assertThat(modelFolder).isNotEmptyDirectory();
+    Assertions.assertThat(modelFolder.resolve("OrderDTO.java")).exists();
+    Assertions.assertThat(modelFolder.resolve("OrderLineDTO.java")).exists();
+    Assertions.assertThat(modelFolder.resolve("OrderProductDTO.java")).exists();
+    Assertions.assertThat(modelFolder.resolve("WaiterDTO.java")).exists();
+
+    Assertions.assertThat(consumerApiFolder).isDirectory();
+    Assertions.assertThat(consumerApiFolder).isEmptyDirectory();
+    Assertions.assertThat(producerApiFolder).isDirectory();
+    Assertions.assertThat(producerApiFolder).isEmptyDirectory();
+
+    final Path modelOnlyTree = target.resolve("generated/com/sngular/scsplugin/modelonly");
+    try (Stream<Path> files = Files.walk(modelOnlyTree)) {
+      Assertions.assertThat(files.map(Path::getFileName).map(Path::toString))
+          .noneMatch(name -> name.startsWith("I") && name.endsWith(".java"))
+          .noneMatch("Channels.java"::equals)
+          .noneMatch("Subscriber.java"::equals)
+          .noneMatch("Producer.java"::equals);
+    }
   }
 
   @Test

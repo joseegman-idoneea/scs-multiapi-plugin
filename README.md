@@ -320,13 +320,16 @@ can be configured in the plugin.
 - **consumer**, **supplier** and **streamBridge**: They are both configured in
   the same way and can receive the same parameters. These parameters are:
   - **ids**: With this parameter you can set the operationId that you want to
-      be generated as subscriber or publisher. If this parameter is not defined for
-      the `consumer` section, all the subscribe operations defined in the YML file,
-      will be generated. If only one of `supplier` and `streamBridge` sections are
-      defined, and this parameter is not defined inside it, all the publish
-      operations defined in the YML file will be generated. If both `supplier` and
-      `streamBridge` sections are defined, it`s needed to define which operations
-      belong to each category.
+      be generated as subscriber or publisher. It can be a single
+      [`String`]: for example `ids = 'publishOperation'`, or a list of them:
+      for example `ids = ['publishOperation', 'anotherOperation']`. If a list is
+      provided, each element of the list will be generated. If this parameter is
+      not defined for the `consumer` section, all the subscribe operations defined
+      in the YML file, will be generated. If only one of `supplier` and
+      `streamBridge` sections are defined, and this parameter is not defined inside
+      it, all the publish operations defined in the YML file will be generated. If
+      both `supplier` and `streamBridge` sections are defined, it`s needed to define
+      which operations belong to each category.
   - **classNamePostfix**: This parameter receives the name of the class that
       it's going to be generated containing the Beans. This parameter is optional,
       and by default the classes will be called `Producer`, `StreamBridgeProducer`
@@ -357,6 +360,11 @@ can be configured in the plugin.
       The default value are `yyyy-MM-dd'T'HH:mm:ss`.
   -  **useTimeType**: Enum TimeType value. Controls the types used when generating dates. Can be `LOCAL` or `ZOINED`.
       The default value is `TimeType.LOCAL`. 
+  -  **generateSpringwolfAnnotations**: Boolean value. When set to `true`, the generated
+      `Subscriber` and `Producer` bean methods are annotated with Springwolf's
+      `@AsyncListener` / `@AsyncPublisher` (with the channel name and `operationId`).
+      **It's initialized to `false` by default**. Only applies to `consumer` and `supplier`
+      sections (not `streamBridge`), and not in combination with Kafka bindings.
 
 The configuration of `consumer`, `supplier` and `streamBridge` are independent.
 If only one of them is configured in the pom file, only that one will be
@@ -754,7 +762,7 @@ be saved in the api of the project.
 | clientPackage                                       | Path where the RestClient and/or WebClient are located                                                                                                                                                                                                                          | com.sngular.apigenerator.openapi.client |
 | [generatedSourcesFolder](#generated-sources-folder) | Name of the folder, inside `target`, where the files will be located. By defaut it's `generated-sources`                                                                                                                                                                        | generated-sources                       |
 | overwriteModel                                      | Boolean value to decide if you want your models to be overwritten if two or more models have the same name. True means that models will be overwritten and if false is set, it will throw an exception if two models share the same name. It is initialized to false by default | false                                   |
-| springBootVersion                                   | The version of spring to target during generation. It's default value is `2`.                                                                                                                                                                                                   | 3                                       |
+| springBootVersion                                   | The version of spring to target during generation. It's default value is `2`. Values `>= 3` emit `jakarta.*` imports (instead of `javax.*`); values `>= 4` additionally emit Jackson 3 (`tools.jackson.*`) and Spring Framework 7 imports (see below).                            | 4                                       |
 
 We must clarify that the options to make calls are configured under the
 RestClient or WebClient specifications as indicated above in the configuration
@@ -762,6 +770,28 @@ options. If several of the APIs to be generated are defined under the same call
 option, a single RestClient/Webclient will be generated for all of them, which
 is initialized with the specific options needed within the class that defines
 each API.
+
+### Spring Boot 4 / Jackson 3 support
+
+Setting `springBootVersion` to `4` (or higher) targets Spring Boot 4
+(Spring Framework 7), which ships **Jackson 3** as its default JSON stack.
+When this is set, the generated code changes as follows:
+
+- Jackson `databind` imports are emitted under `tools.jackson.*` instead of
+  `com.fasterxml.jackson.*` (e.g. `tools.jackson.databind.annotation.JsonDeserialize`).
+- Jackson **annotations** keep their original coordinates
+  (`com.fasterxml.jackson.annotation.*`, such as `@JsonProperty`), matching
+  Jackson 3's own packaging.
+- Generated RestClient/WebClient build an immutable `JsonMapper` via
+  `JsonMapper.builder()` (the Jackson 2 mutable `ObjectMapper` API is gone), and
+  the reactive WebClient uses the Spring Framework 7 codecs
+  (`JacksonJsonEncoder`/`JacksonJsonDecoder`).
+
+For `springBootVersion < 4` the output is unchanged and keeps targeting Jackson 2.
+
+> **Note:** Lombok-annotated models (`useLombokModelAnnotation`) rely on Lombok's
+> `@Jacksonized`, which does not yet support Jackson 3. Combining Lombok models
+> with `springBootVersion = 4` is therefore not supported.
 
 ### Usage considerations
 

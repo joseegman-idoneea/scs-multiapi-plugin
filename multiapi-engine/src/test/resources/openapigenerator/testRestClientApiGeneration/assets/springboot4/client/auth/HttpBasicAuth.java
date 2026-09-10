@@ -1,4 +1,4 @@
-package com.sngular.multifileplugin.restclientWithRequestObjects.client.auth;
+package com.sngular.multifileplugin.restclient.client.auth;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;

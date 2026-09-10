@@ -25,6 +25,7 @@ import com.sngular.api.generator.plugin.common.tools.ApiTool;
 import com.sngular.api.generator.plugin.common.tools.MapperContentUtil;
 import com.sngular.api.generator.plugin.common.tools.MapperUtil;
 import com.sngular.api.generator.plugin.common.tools.PathUtil;
+import com.sngular.api.generator.plugin.common.tools.SchemaUtil;
 import com.sngular.api.generator.plugin.exception.GeneratorTemplateException;
 import com.sngular.api.generator.plugin.openapi.exception.DuplicateModelClassException;
 import com.sngular.api.generator.plugin.openapi.model.AuthObject;
@@ -82,6 +83,7 @@ public class OpenApiGenerator {
 
   public final void processFileSpec(final List<SpecFile> specsListFile) {
     for (SpecFile specFile : specsListFile) {
+      authentications.clear();
       processPackage(specFile.getApiPackage());
       processFile(specFile);
       createClients(specFile);
@@ -115,6 +117,14 @@ public class OpenApiGenerator {
     }
 
     templateFactory.calculateJavaEEPackage(springBootVersion);
+    templateFactory.calculateJacksonPackage(springBootVersion);
+    // Resolve the model package up front so the API interface imports models from the same
+    // package they are actually written to (the interface is rendered before the models).
+    // Only when a package can be derived from the spec (explicit modelPackage, or apiPackage);
+    // otherwise the legacy default resolution is preserved untouched.
+    if (StringUtils.isNotBlank(specFile.getApiPackage()) || StringUtils.isNotBlank(specFile.getModelPackage())) {
+      templateFactory.setModelPackageName(processModelPackage(specFile.getApiPackage(), specFile.getModelPackage()));
+    }
     final var globalObject = createApiTemplate(specFile, openAPI);
 
     createModelTemplate(specFile, openAPI, globalObject);
@@ -165,7 +175,7 @@ public class OpenApiGenerator {
   }
 
   private void createModelTemplate(final SpecFile specFile, final JsonNode openAPI, final GlobalObject globalObject) {
-    final var modelPackage = processModelPackage(specFile.getModelPackage());
+    final var modelPackage = processModelPackage(specFile.getApiPackage(), specFile.getModelPackage());
 
     final var totalSchemas = OpenApiUtil.processPaths(openAPI, globalObject.getSchemaMap(), specFile);
     templateFactory.setModelPackageName(modelPackage);
@@ -197,10 +207,12 @@ public class OpenApiGenerator {
     }
   }
 
-  private String processModelPackage(final String modelPackage) {
-    var modelReturnPackage = "";
+  private String processModelPackage(final String apiPackage, final String modelPackage) {
+    final String modelReturnPackage;
     if (StringUtils.isNotBlank(modelPackage)) {
       modelReturnPackage = modelPackage.trim();
+    } else if (StringUtils.isNotBlank(apiPackage)) {
+      modelReturnPackage = apiPackage.trim() + ".model";
     } else if (groupId != null) {
       modelReturnPackage = groupId + ".model";
     } else {
@@ -235,8 +247,22 @@ public class OpenApiGenerator {
     }
 
     if (ApiTool.hasRef(basicSchema)) {
+      final String refValue = ApiTool.getRefValue(basicSchema);
       final var refSchema = MapperUtil.getRefSchemaName(basicSchema, schemaName);
-      writeSchemaObject(specFile, refSchema, basicSchemaMap.get(refSchema), basicSchemaMap, modelPackage);
+      JsonNode resolvedSchema = basicSchemaMap.get(refSchema);
+      if (Objects.isNull(resolvedSchema) && StringUtils.isNotEmpty(refValue) && !refValue.startsWith("#")) {
+        // Whole-file external $ref (no JSON-pointer fragment): the file IS the schema.
+        // Resolve it from the filesystem so the model is generated.
+        try {
+          resolvedSchema =
+              SchemaUtil.solveRef(refValue, basicSchemaMap, this.baseDir.resolve(specFile.getFilePath()).getParent().toUri());
+        } catch (final Exception e) {
+          resolvedSchema = null;
+        }
+      }
+      if (Objects.nonNull(resolvedSchema)) {
+        writeSchemaObject(specFile, refSchema, resolvedSchema, basicSchemaMap, modelPackage);
+      }
     } else if (!ApiTool.isArray(basicSchema) && !TypeConstants.STRING.equalsIgnoreCase(ApiTool.getType(basicSchema))) {
       writeSchemaObject(specFile, schemaName, basicSchema, basicSchemaMap, modelPackage);
     }
@@ -256,17 +282,24 @@ public class OpenApiGenerator {
     final String parentPackage = modelPackage.substring(modelPackage.lastIndexOf(".") + 1);
     final var schemaObjectIt = MapperContentUtil
                                    .mapComponentToSchemaObject(basicSchemaMap, schemaName, model, parentPackage, specFile, this.baseDir).iterator();
+    // Write to the resolved model package only when it is derivable from the spec (explicit
+    // modelPackage or apiPackage); otherwise keep the legacy default (raw modelPackage, which
+    // the writer defaults to the plugin's base package).
+    final String writeModelPackage =
+        StringUtils.isNotBlank(specFile.getModelPackage()) || StringUtils.isNotBlank(specFile.getApiPackage())
+            ? modelPackage : specFile.getModelPackage();
     if (schemaObjectIt.hasNext()) {
-      writeSchemaObject(specFile.isUseLombokModelAnnotation(), specFile.getModelPackage(), schemaName, schemaObjectIt.next());
+      writeSchemaObject(specFile.isUseLombokModelAnnotation(), specFile.isUsePactAnnotation(), writeModelPackage, schemaName, schemaObjectIt.next());
     }
-    schemaObjectIt.forEachRemaining(schemaObj -> writeSchemaObject(specFile.isUseLombokModelAnnotation(), specFile.getModelPackage(), null, schemaObj));
+    schemaObjectIt.forEachRemaining(schemaObj -> writeSchemaObject(specFile.isUseLombokModelAnnotation(), specFile.isUsePactAnnotation(), writeModelPackage, null, schemaObj));
 
   }
 
-  private void writeSchemaObject(final boolean usingLombok, final String modelPackageReceived, final String keyClassName, final SchemaObject schemaObject) {
+  private void writeSchemaObject(final boolean usingLombok, final boolean usingPact, final String modelPackageReceived, final String keyClassName,
+                                 final SchemaObject schemaObject) {
     final var finalModelPackageReceived = StringUtils.defaultIfEmpty(modelPackageReceived, DEFAULT_OPENAPI_API_PACKAGE);
     final var destinationPackage = StringUtils.defaultIfEmpty(finalModelPackageReceived, DEFAULT_OPENAPI_API_PACKAGE + SLASH + schemaObject.getParentPackage());
-    templateFactory.addSchemaObject(finalModelPackageReceived, keyClassName, schemaObject, destinationPackage, usingLombok);
+    templateFactory.addSchemaObject(finalModelPackageReceived, keyClassName, schemaObject, destinationPackage, usingLombok, usingPact);
     templateFactory.checkRequiredOrCombinatorExists(schemaObject, usingLombok);
   }
 }

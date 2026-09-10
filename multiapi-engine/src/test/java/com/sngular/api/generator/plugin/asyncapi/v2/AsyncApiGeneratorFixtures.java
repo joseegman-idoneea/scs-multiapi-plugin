@@ -9,11 +9,14 @@ package com.sngular.api.generator.plugin.asyncapi.v2;
 import static java.util.Collections.singletonList;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.sngular.api.generator.plugin.asyncapi.parameter.OperationParameterObject;
 import com.sngular.api.generator.plugin.asyncapi.parameter.SpecFile;
@@ -39,6 +42,48 @@ public class AsyncApiGeneratorFixtures {
               .modelNameSuffix("Mapper")
               .apiPackage("com.sngular.scsplugin.filegeneration.model.event.producer")
               .modelPackage("com.sngular.scsplugin.filegeneration.model.event")
+              .build())
+          .build()
+  );
+
+  static final List<SpecFile> TEST_GENERATE_MODEL_ONLY = List.of(
+      SpecFile
+          .builder()
+          .filePath("asyncapigenerator/v2/testFileGeneration/event-api.yml")
+          .generateModelOnly(true)
+          .consumer(OperationParameterObject.builder()
+              .ids("publishOperationFileGeneration")
+              .classNamePostfix("TestClassName")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.modelonly.model.event.consumer")
+              .modelPackage("com.sngular.scsplugin.modelonly.model.event")
+              .build())
+          .supplier(OperationParameterObject.builder()
+              .ids("subscribeOperationFileGeneration")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.modelonly.model.event.producer")
+              .modelPackage("com.sngular.scsplugin.modelonly.model.event")
+              .build())
+          .build()
+  );
+
+  static final List<SpecFile> TEST_GENERATE_SPRINGWOLF = List.of(
+      SpecFile
+          .builder()
+          .filePath("asyncapigenerator/v2/testFileGeneration/event-api.yml")
+          .consumer(OperationParameterObject.builder()
+              .ids("publishOperationFileGeneration")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.springwolf.model.event.consumer")
+              .modelPackage("com.sngular.scsplugin.springwolf.model.event")
+              .generateSpringwolfAnnotations(true)
+              .build())
+          .supplier(OperationParameterObject.builder()
+              .ids("subscribeOperationFileGeneration")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.springwolf.model.event.producer")
+              .modelPackage("com.sngular.scsplugin.springwolf.model.event")
+              .generateSpringwolfAnnotations(true)
               .build())
           .build()
   );
@@ -141,6 +186,44 @@ public class AsyncApiGeneratorFixtures {
               .modelNameSuffix("DTO")
               .apiPackage("com.sngular.scsplugin.customvalidator.model.event.producer")
               .modelPackage("com.sngular.scsplugin.customvalidator.model.event")
+              .build())
+          .build()
+  );
+
+  static final List<SpecFile> TEST_ISSUE_248_GENERATION = List.of(
+      SpecFile
+          .builder()
+          .filePath("asyncapigenerator/v2/testIssueCustomValidators248/event-api.yml")
+          .consumer(OperationParameterObject.builder()
+              .ids("publishOrder")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.issue248.model.event.consumer")
+              .modelPackage("com.sngular.scsplugin.issue248.model.event")
+              .build())
+          .supplier(OperationParameterObject.builder()
+              .ids("subscribeOrder")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.issue248.model.event.producer")
+              .modelPackage("com.sngular.scsplugin.issue248.model.event")
+              .build())
+          .build()
+  );
+
+  static final List<SpecFile> TEST_CUSTOM_VALIDATORS_DIFFERENT_PACKAGES = List.of(
+      SpecFile
+          .builder()
+          .filePath("asyncapigenerator/v2/testCustomValidatorsDifferentPackages/event-api.yml")
+          .consumer(OperationParameterObject.builder()
+              .ids("customValidatorResponse")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.customvalidatordiff.model.event.consumer")
+              .modelPackage("com.sngular.scsplugin.customvalidatordiff.model.event.consumer")
+              .build())
+          .supplier(OperationParameterObject.builder()
+              .ids("customValidatorClients")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.customvalidatordiff.model.event.producer")
+              .modelPackage("com.sngular.scsplugin.customvalidatordiff.model.event.producer")
               .build())
           .build()
   );
@@ -423,6 +506,26 @@ public class AsyncApiGeneratorFixtures {
                       .ids("userSignedUp")
                       .apiPackage("com.github.issue.listener")
                       .modelPackage("com.github.issue.model")
+                      .build())
+              .build());
+
+  static final List<SpecFile> TEST_ISSUE_292_STREETLIGHTS =
+      List.of(
+          SpecFile.builder()
+              .filePath("asyncapigenerator/v2/testIssue292Streetlights/event-api.yml")
+              .consumer(
+                  OperationParameterObject.builder()
+                      .ids("turnOn,turnOff,dimLight")
+                      .modelNameSuffix("DTO")
+                      .apiPackage("com.sngular.scsplugin.streetlights.model.event.consumer")
+                      .modelPackage("com.sngular.scsplugin.streetlights.model.event")
+                      .build())
+              .supplier(
+                  OperationParameterObject.builder()
+                      .ids("receiveLightMeasurement")
+                      .modelNameSuffix("DTO")
+                      .apiPackage("com.sngular.scsplugin.streetlights.model.event.producer")
+                      .modelPackage("com.sngular.scsplugin.streetlights.model.event")
                       .build())
               .build());
 
@@ -733,6 +836,95 @@ public class AsyncApiGeneratorFixtures {
         expectedExceptionFiles, DEFAULT_EXCEPTION_API) &&
         modelTest(path, expectedModelSchemaFiles, DEFAULT_MODEL_SCHEMA_FOLDER) &&
         customValidatorTest(path, expectedValidatorFiles, DEFAULT_CUSTOM_VALIDATOR_FOLDER);
+  }
+
+  static Function<Path, Boolean> validateIssue248PackageFolderAlignment() {
+    return path -> {
+      final Path pathToTarget = Path.of(path.toString(), "target", "generated");
+      Boolean result = Boolean.TRUE;
+      try (final Stream<Path> javaFiles = Files.walk(pathToTarget)) {
+        final List<Path> generatedFiles = javaFiles
+            .filter(Files::isRegularFile)
+            .filter(p -> p.toString().endsWith(".java"))
+            .toList();
+        Assertions.assertThat(generatedFiles).isNotEmpty();
+        for (final Path javaFile : generatedFiles) {
+          final String packageDeclaration = Files.readAllLines(javaFile).stream()
+              .filter(line -> line.startsWith("package "))
+              .findFirst()
+              .map(line -> line.replace("package ", "").replace(";", "").trim())
+              .orElseThrow();
+          final String expectedPackage = pathToTarget.relativize(javaFile).getParent().toString().replace(File.separatorChar, '.');
+          Assertions.assertThat(packageDeclaration)
+              .overridingErrorMessage("File %s declares package %s but lives in folder matching %s", javaFile, packageDeclaration, expectedPackage)
+              .isEqualTo(expectedPackage);
+        }
+      } catch (final IOException e) {
+        result = Boolean.FALSE;
+      }
+      return result;
+    };
+  }
+
+  static Function<Path, Boolean> validateCustomValidatorsDifferentPackages() {
+    final String DEFAULT_CONSUMER_MODEL_FOLDER = "generated/com/sngular/scsplugin/customvalidatordiff/model/event/consumer";
+
+    final String DEFAULT_PRODUCER_MODEL_FOLDER = "generated/com/sngular/scsplugin/customvalidatordiff/model/event/producer";
+
+    final String COMMON_PATH = "asyncapigenerator/v2/testCustomValidatorsDifferentPackages/";
+
+    final List<String> expectedValidatorFiles = List.of(
+        COMMON_PATH + "assets/customvalidator/MaxBigDecimal.java",
+        COMMON_PATH + "assets/customvalidator/MaxBigDecimalValidator.java",
+        COMMON_PATH + "assets/customvalidator/MaxDouble.java",
+        COMMON_PATH + "assets/customvalidator/MaxDoubleValidator.java",
+        COMMON_PATH + "assets/customvalidator/MaxFloat.java",
+        COMMON_PATH + "assets/customvalidator/MaxFloatValidator.java",
+        COMMON_PATH + "assets/customvalidator/MaxInteger.java",
+        COMMON_PATH + "assets/customvalidator/MaxIntegerValidator.java",
+        COMMON_PATH + "assets/customvalidator/MinBigDecimal.java",
+        COMMON_PATH + "assets/customvalidator/MinBigDecimalValidator.java",
+        COMMON_PATH + "assets/customvalidator/MinDouble.java",
+        COMMON_PATH + "assets/customvalidator/MinDoubleValidator.java",
+        COMMON_PATH + "assets/customvalidator/MinFloat.java",
+        COMMON_PATH + "assets/customvalidator/MinFloatValidator.java",
+        COMMON_PATH + "assets/customvalidator/MinInteger.java",
+        COMMON_PATH + "assets/customvalidator/MinIntegerValidator.java",
+        COMMON_PATH + "assets/customvalidator/NotNull.java",
+        COMMON_PATH + "assets/customvalidator/NotNullValidator.java",
+        COMMON_PATH + "assets/customvalidator/Pattern.java",
+        COMMON_PATH + "assets/customvalidator/PatternValidator.java",
+        COMMON_PATH + "assets/customvalidator/Size.java",
+        COMMON_PATH + "assets/customvalidator/SizeValidator.java"
+    );
+
+    final List<String> expectedProducerValidatorFiles = List.of(
+        COMMON_PATH + "assets/customvalidator_producer/MaxBigDecimal.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxBigDecimalValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxDouble.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxDoubleValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxFloat.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxFloatValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxInteger.java",
+        COMMON_PATH + "assets/customvalidator_producer/MaxIntegerValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinBigDecimal.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinBigDecimalValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinDouble.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinDoubleValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinFloat.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinFloatValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinInteger.java",
+        COMMON_PATH + "assets/customvalidator_producer/MinIntegerValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/NotNull.java",
+        COMMON_PATH + "assets/customvalidator_producer/NotNullValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/Pattern.java",
+        COMMON_PATH + "assets/customvalidator_producer/PatternValidator.java",
+        COMMON_PATH + "assets/customvalidator_producer/Size.java",
+        COMMON_PATH + "assets/customvalidator_producer/SizeValidator.java"
+    );
+
+    return path -> customValidatorTest(path, expectedValidatorFiles, DEFAULT_CONSUMER_MODEL_FOLDER + "/customvalidator") &&
+        customValidatorTest(path, expectedProducerValidatorFiles, DEFAULT_PRODUCER_MODEL_FOLDER + "/customvalidator");
   }
 
   private static String calculateJavaEEPackage(final int springBootVersion) {
@@ -1118,6 +1310,7 @@ public class AsyncApiGeneratorFixtures {
 
     final List<String> expectedConsumerFiles =
         List.of(
+            ASSETS_PATH + "input/controller/Channels.java",
             ASSETS_PATH + "input/controller/IInput.java",
             ASSETS_PATH + "input/controller/Subscriber.java");
 
@@ -1174,5 +1367,69 @@ public class AsyncApiGeneratorFixtures {
             Collections.emptyList(),
             null)
             && modelTest(path, expectedConsumerModelSchemaFiles, DEFAULT_CONSUMER_MODEL_FOLDER);
+  }
+
+  static Function<Path, Boolean> validateTestIssue292Streetlights() {
+    final String DEFAULT_COMMON_FOLDER = "generated/com/sngular/scsplugin/streetlights/model/event";
+
+    final String DEFAULT_CONSUMER_FOLDER = DEFAULT_COMMON_FOLDER + "/consumer";
+
+    final String DEFAULT_PRODUCER_FOLDER = DEFAULT_COMMON_FOLDER + "/producer";
+
+    final String DEFAULT_CUSTOM_VALIDATOR_FOLDER = DEFAULT_COMMON_FOLDER + "/customvalidator";
+
+    final String COMMON_PATH = "asyncapigenerator/v2/testIssue292Streetlights/";
+
+    final String ASSETS_PATH = COMMON_PATH + "assets/";
+
+    final List<String> expectedConsumerFiles =
+        List.of(
+            ASSETS_PATH + "consumer/Channels.java",
+            ASSETS_PATH + "consumer/IDimLight.java",
+            ASSETS_PATH + "consumer/ITurnOff.java",
+            ASSETS_PATH + "consumer/ITurnOn.java",
+            ASSETS_PATH + "consumer/Subscriber.java");
+
+    final List<String> expectedProducerFiles =
+        List.of(
+            ASSETS_PATH + "producer/IReceiveLightMeasurement.java",
+            ASSETS_PATH + "producer/Producer.java");
+
+    final List<String> expectedModelSchemaFiles =
+        List.of(
+            ASSETS_PATH + "DimLightPayloadDTO.java",
+            ASSETS_PATH + "LightMeasuredPayloadDTO.java",
+            ASSETS_PATH + "TurnOnOffPayloadDTO.java");
+
+    final List<String> expectedValidatorFiles =
+        List.of(
+            COMMON_PATH + "customvalidator/MaxBigDecimal.java",
+            COMMON_PATH + "customvalidator/MaxBigDecimalValidator.java",
+            COMMON_PATH + "customvalidator/MaxDouble.java",
+            COMMON_PATH + "customvalidator/MaxDoubleValidator.java",
+            COMMON_PATH + "customvalidator/MaxFloat.java",
+            COMMON_PATH + "customvalidator/MaxFloatValidator.java",
+            COMMON_PATH + "customvalidator/MaxInteger.java",
+            COMMON_PATH + "customvalidator/MaxIntegerValidator.java",
+            COMMON_PATH + "customvalidator/MinBigDecimal.java",
+            COMMON_PATH + "customvalidator/MinBigDecimalValidator.java",
+            COMMON_PATH + "customvalidator/MinDouble.java",
+            COMMON_PATH + "customvalidator/MinDoubleValidator.java",
+            COMMON_PATH + "customvalidator/MinFloat.java",
+            COMMON_PATH + "customvalidator/MinFloatValidator.java",
+            COMMON_PATH + "customvalidator/MinInteger.java",
+            COMMON_PATH + "customvalidator/MinIntegerValidator.java");
+
+    return path ->
+        commonTest(
+            path,
+            expectedConsumerFiles,
+            expectedProducerFiles,
+            DEFAULT_CONSUMER_FOLDER,
+            DEFAULT_PRODUCER_FOLDER,
+            Collections.emptyList(),
+            null)
+            && modelTest(path, expectedModelSchemaFiles, DEFAULT_COMMON_FOLDER)
+            && customValidatorTest(path, expectedValidatorFiles, DEFAULT_CUSTOM_VALIDATOR_FOLDER);
   }
 }

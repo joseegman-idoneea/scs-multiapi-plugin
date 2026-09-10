@@ -16,6 +16,8 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.sngular.api.generator.plugin.openapi.exception.FileParseException;
 import org.apache.commons.lang3.StringUtils;
@@ -37,15 +39,12 @@ public class SchemaUtil {
         final var refValueArr = refValue.split("#");
         final var filePath = refValueArr[0];
         final URI actualFileBase = resolveActualBaseUri(rootFilePath, filePath);
-        solvedRef = getPojoFromRef(rootFilePath, filePath);
+        solvedRef = loadAndResolveRefs(rootFilePath, filePath);
         if (ApiTool.hasComponents(solvedRef)) {
           schemaMap.putAll(ApiTool.getComponentSchemas(solvedRef));
           if (refValueArr.length > 1) {
             solvedRef = solvedRef.findValue(MapperUtil.getKey(refValueArr[1]));
           }
-        }
-        if (Objects.nonNull(solvedRef) && Objects.nonNull(actualFileBase)) {
-          resolveNestedFileRefs(solvedRef, actualFileBase);
         }
       }
     } else {
@@ -58,7 +57,7 @@ public class SchemaUtil {
    * Computes a clean schema-map key from a file-based $ref value.
    * E.g. "./ServiceType.yml" -> "SCHEMAS/SERVICE_TYPE"
    */
-  static String computeFileSchemaKey(final String refValue) {
+  public static String computeFileSchemaKey(final String refValue) {
     try {
       final String[] parts = refValue.split("/");
       final String lastRaw = parts[parts.length - 1];
@@ -93,30 +92,113 @@ public class SchemaUtil {
     }
   }
 
-  private static void resolveNestedFileRefs(final JsonNode node, final URI baseUri) {
-    if (Objects.isNull(node) || !node.isObject()) {
+  static void resolveNestedFileRefs(final JsonNode node, final URI baseUri) {
+    if (Objects.isNull(node)) {
       return;
     }
+    if (node.isArray()) {
+      resolveNestedFileRefsInArray((ArrayNode) node, baseUri);
+    } else if (node.isObject()) {
+      resolveNestedFileRefsInObject(node, baseUri);
+    }
+  }
+
+  private static void resolveNestedFileRefsInArray(final ArrayNode array, final URI baseUri) {
+    for (int i = 0; i < array.size(); i++) {
+      final JsonNode element = array.get(i);
+      if (element.isObject() && element.has("$ref")) {
+        final boolean resolved = resolveRefInArray(array, i, baseUri);
+        if (!resolved) {
+          resolveNestedFileRefs(element, baseUri);
+        }
+      } else {
+        resolveNestedFileRefs(element, baseUri);
+      }
+    }
+  }
+
+  private static void resolveNestedFileRefsInObject(final JsonNode node, final URI baseUri) {
     final Iterator<Entry<String, JsonNode>> fields = node.fields();
     while (fields.hasNext()) {
       final Entry<String, JsonNode> field = fields.next();
       if (field.getValue().isObject() && field.getValue().has("$ref")) {
-        final String refVal = field.getValue().get("$ref").textValue();
-        if (StringUtils.isNotEmpty(refVal) && !refVal.startsWith("#") && !refVal.startsWith("http")) {
-          try {
-            final URI nestedBase = resolveActualBaseUri(baseUri, refVal);
-            final JsonNode resolved = getPojoFromRef(baseUri, refVal);
-            if (Objects.nonNull(resolved)) {
-              field.setValue(resolved);
-              resolveNestedFileRefs(resolved, nestedBase);
-            }
-          } catch (final Exception ignored) {
-          }
+        final boolean resolved = resolveRefInObject((ObjectNode) node, field.getKey(), baseUri);
+        if (!resolved) {
+          resolveNestedFileRefs(field.getValue(), baseUri);
         }
       } else {
         resolveNestedFileRefs(field.getValue(), baseUri);
       }
     }
+  }
+
+  private static boolean resolveRefInArray(final ArrayNode array, final int index, final URI baseUri) {
+    final JsonNode refNode = array.get(index);
+    final String refVal = refNode.get("$ref").textValue();
+    if (StringUtils.isEmpty(refVal) || refVal.startsWith("#") || refVal.startsWith("http") || PathUtil.isRemoteUri(refVal)) {
+      return false;
+    }
+    try {
+      final URI nestedBase = resolveActualBaseUri(baseUri, refVal);
+      final JsonNode resolved = resolveExternalFileRef(baseUri, refVal);
+      if (Objects.nonNull(resolved)) {
+        array.set(index, resolved);
+        resolveNestedFileRefs(resolved, nestedBase);
+        return true;
+      }
+    } catch (final Exception ignored) {
+    }
+    return false;
+  }
+
+  private static boolean resolveRefInObject(final ObjectNode parent, final String fieldName, final URI baseUri) {
+    final JsonNode refNode = parent.get(fieldName);
+    final String refVal = refNode.get("$ref").textValue();
+    if (StringUtils.isEmpty(refVal) || refVal.startsWith("#") || refVal.startsWith("http") || PathUtil.isRemoteUri(refVal)) {
+      return false;
+    }
+    try {
+      final URI nestedBase = resolveActualBaseUri(baseUri, refVal);
+      final JsonNode resolved = resolveExternalFileRef(baseUri, refVal);
+      if (Objects.nonNull(resolved)) {
+        parent.set(fieldName, resolved);
+        resolveNestedFileRefs(resolved, nestedBase);
+        return true;
+      }
+    } catch (final Exception ignored) {
+    }
+    return false;
+  }
+
+  static URI resolveActualBaseUriPublic(final URI rootFilePath, final String filePath) {
+    return resolveActualBaseUri(rootFilePath, filePath);
+  }
+
+  /**
+   * Resolves a reference that points at another file, optionally with a JSON Pointer
+   * fragment (e.g. {@code ../components/components.yaml#/components/schemas/Example}).
+   * The file itself is loaded relative to {@code baseUri} independent of the fragment, so
+   * refs living in an external Path Item file resolve against the folder of that file
+   * instead of the root contract.
+   *
+   * @param baseUri base URI of the file that contains the reference.
+   * @param refValue the raw {@code $ref} value.
+   * @return the resolved node (whole file, or the fragment target) or {@code null}.
+   */
+  private static JsonNode resolveExternalFileRef(final URI baseUri, final String refValue) {
+    JsonNode resolved = null;
+    if (StringUtils.isNotEmpty(refValue)) {
+      final var refValueArr = refValue.split("#");
+      if (refValueArr.length > 1) {
+        final var fileNode = loadAndResolveRefs(baseUri, refValueArr[0]);
+        if (ApiTool.hasComponents(fileNode)) {
+          resolved = fileNode.findValue(MapperUtil.getKey(refValueArr[1]));
+        }
+      } else {
+        resolved = loadAndResolveRefs(baseUri, refValue);
+      }
+    }
+    return resolved;
   }
 
   public static JsonNode getPojoFromRef(final URI rootFilePath, final String refPath) {
@@ -130,6 +212,15 @@ public class SchemaUtil {
       throw new FileParseException("empty .yml");
     }
     return schemaFile;
+  }
+
+  public static JsonNode loadAndResolveRefs(final URI rootFilePath, final String refPath) {
+    final JsonNode node = getPojoFromRef(rootFilePath, refPath);
+    final URI actualBase = resolveActualBaseUri(rootFilePath, refPath);
+    if (Objects.nonNull(actualBase)) {
+      resolveNestedFileRefs(node, actualBase);
+    }
+    return node;
   }
 
   private static String readFile(final URI rootFilePath, final String filePath) throws MalformedURLException {

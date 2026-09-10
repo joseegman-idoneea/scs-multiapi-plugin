@@ -47,7 +47,8 @@ public class SchemaFieldObjectType {
       new SimpleImmutableEntry<>(TypeConstants.ARRAY, "java.util.List"),
       new SimpleImmutableEntry<>(TypeConstants.MAP, "java.util.Map"),
       new SimpleImmutableEntry<>(TypeConstants.BIG_DECIMAL, "java.math.BigDecimal"),
-      new SimpleImmutableEntry<>(TypeConstants.STRING, "java.lang.String"),
+      // String is a java.lang type (implicitly imported); it must not produce an
+      // "import java.lang.String;" statement, so it has no import mapping (issue #371).
       new SimpleImmutableEntry<>(TypeConstants.LOCALDATE, "java.time.LocalDate"),
       new SimpleImmutableEntry<>(TypeConstants.LOCALDATETIME, "java.time.LocalDateTime"),
       new SimpleImmutableEntry<>(TypeConstants.ZONEDDATE, "java.time." + ZONED_DATE_TIME),

@@ -137,12 +137,12 @@ public class MapperPathUtil {
   private static OperationObject createOperation(
       final JsonNode operation, final String operationType, final SpecFile specFile, final GlobalObject globalObject,
       final List<String> operationIdList, final Path baseDir) {
-    Objects.requireNonNull(operation.get("tags"), "Tags element is required");
+    final JsonNode tagsNode = operation.has("tags") ? operation.get("tags") : null;
     return OperationObject.builder()
                           .operationId(mapOperationId(getOperationId(operation), operationIdList))
                           .operationType(operationType)
                           .summary(ApiTool.getNodeAsString(operation, "summary"))
-                          .tags(elementsToStrList(operation.get("tags").elements()))
+                          .tags(elementsToStrList(Objects.nonNull(tagsNode) ? tagsNode.elements() : null))
                           .requestObjects(mapRequestObject(specFile, operation, globalObject, baseDir))
                           .responseObjects(mapResponseObject(specFile, globalObject, operation, baseDir))
                           .parameterObjects(mapParameterObjects(IteratorUtils.toList(operation.at("/parameters").elements()), specFile, getOperationId(operation),
@@ -159,7 +159,9 @@ public class MapperPathUtil {
 
   private static List<String> elementsToStrList(final Iterator<JsonNode> tags) {
     final List<String> stringList = new ArrayList<>();
-    tags.forEachRemaining(tag -> stringList.add(tag.asText()));
+    if (Objects.nonNull(tags)) {
+      tags.forEachRemaining(tag -> stringList.add(tag.asText()));
+    }
     return stringList;
   }
 
@@ -351,30 +353,37 @@ public class MapperPathUtil {
   private static void buildResponse(
       final SpecFile specFile, final GlobalObject globalObject, final List<ResponseObject> responseObjects, final String operationId, final Path baseDir, final String responseCode,
       final JsonNode response) {
-    var realResponse = response;
+    JsonNode realResponse = response;
     if (ApiTool.hasRef(response)) {
       final String refValue = ApiTool.getRefValue(response);
       if (refValue.startsWith("#")) {
         final Optional<JsonNode> resolvedResponse = globalObject.getResponseNode(MapperUtil.getRefSchemaKey(response));
-        if (resolvedResponse.isEmpty()) {
-          return;
+        if (resolvedResponse.isPresent()) {
+          realResponse = resolvedResponse.get();
+        } else {
+          try {
+            final URI baseUri = baseDir.resolve(specFile.getFilePath()).getParent().toUri();
+            realResponse = SchemaUtil.solveRef(refValue, globalObject.getResponseMap(), baseUri);
+          } catch (final Exception e) {
+            realResponse = null;
+          }
         }
-        realResponse = resolvedResponse.get();
       } else {
         try {
           final URI baseUri = baseDir.resolve(specFile.getFilePath()).getParent().toUri();
-          realResponse = SchemaUtil.getPojoFromRef(baseUri, refValue);
+          realResponse = SchemaUtil.loadAndResolveRefs(baseUri, refValue);
         } catch (final Exception e) {
-          return;
+          realResponse = null;
         }
       }
     }
     final String operationIdWithCap = operationId.substring(0, 1).toUpperCase() + operationId.substring(1);
-    final var content = ApiTool.getNode(realResponse, CONTENT);
+    final JsonNode content = Objects.nonNull(realResponse) ? ApiTool.getNode(realResponse, CONTENT) : null;
+    final String description = Objects.nonNull(realResponse) ? StringUtils.defaultIfEmpty(ApiTool.getNodeAsString(realResponse, DESCRIPTION), "") : "";
     responseObjects.add(ResponseObject
                             .builder()
                             .responseName(responseCode)
-                            .description(StringUtils.defaultIfEmpty(ApiTool.getNodeAsString(realResponse, DESCRIPTION), ""))
+                            .description(description)
                             .contentObjects(mapContentObject(specFile, content, "InlineResponse" + responseCode + operationIdWithCap, globalObject, baseDir))
                             .build());
   }
@@ -451,7 +460,8 @@ public class MapperPathUtil {
       refSchema = SchemaUtil.solveRef(refValue, globalObject.getSchemaMap(),
                                       baseDir.resolve(specFile.getFilePath()).getParent().toUri());
       if (Objects.nonNull(refSchema) && !refValue.contains("#")) {
-        globalObject.getSchemaMap().put(inlinePojoName, refSchema);
+        final String key = resolveSchemaMapKey(refValue, refSchema, inlinePojoName);
+        globalObject.getSchemaMap().put(key, refSchema);
       }
     } else if (refValue.contains("requestBodies")) {
       refSchema = SchemaUtil.solveRef(refValue, globalObject.getRequestBodyMap(),
@@ -468,6 +478,17 @@ public class MapperPathUtil {
       globalObject.getSchemaMap().put(inlinePojoName, refSchema);
     }
     return refSchema;
+  }
+
+  private static String resolveSchemaMapKey(final String refValue, final JsonNode resolvedSchema, final String inlinePojoName) {
+    if (StringUtils.isNotEmpty(refValue) && !refValue.startsWith("#") && !refValue.contains("#")
+        && !StringUtils.startsWith(inlinePojoName, "Inline")
+        && Objects.nonNull(resolvedSchema) && !ApiTool.hasComponents(resolvedSchema)
+        && (ApiTool.hasType(resolvedSchema) || ApiTool.isComposed(resolvedSchema) || ApiTool.isEnum(resolvedSchema))) {
+      final String fileKey = SchemaUtil.computeFileSchemaKey(refValue);
+      return StringUtils.defaultIfEmpty(fileKey, inlinePojoName);
+    }
+    return inlinePojoName;
   }
 
   private static SchemaFieldObjectType getObjectOrType(

@@ -76,6 +76,7 @@ abstract class AsyncApiTask extends DefaultTask {
     if (apiSpecFile.supplier) {
       builder.supplier(toOperationParameterObject(apiSpecFile.supplier))
     }
+    builder.generateModelOnly(Boolean.TRUE.equals(apiSpecFile.getGenerateModelOnly()))
 
     return builder.build()
   }
@@ -92,11 +93,32 @@ abstract class AsyncApiTask extends DefaultTask {
     if (parameterObject.getIds()) {
       builder.ids(parameterObject.ids)
     }
+    if (parameterObject.getModelNamePrefix()) {
+      builder.modelNamePrefix(parameterObject.modelNamePrefix)
+    }
     if (parameterObject.getModelNameSuffix()) {
       builder.modelNameSuffix(parameterObject.modelNameSuffix)
     }
     if (parameterObject.getModelPackage()) {
       builder.modelPackage(parameterObject.modelPackage)
+    }
+    if (parameterObject.getDateFormat()) {
+      builder.dateFormat(parameterObject.dateFormat)
+    }
+    if (parameterObject.getDateTimeFormat()) {
+      builder.dateTimeFormat(parameterObject.dateTimeFormat)
+    }
+    if (parameterObject.getUseTimeType()) {
+      builder.useTimeType(parameterObject.useTimeType)
+    }
+    if (parameterObject.getUseLombokModelAnnotation()) {
+      builder.useLombokModelAnnotation(parameterObject.useLombokModelAnnotation)
+    }
+    if (parameterObject.getGenerateSpringwolfAnnotations()) {
+      builder.generateSpringwolfAnnotations(parameterObject.generateSpringwolfAnnotations)
+    }
+    if (parameterObject.getUsePactAnnotation()) {
+      builder.usePactAnnotation(parameterObject.usePactAnnotation)
     }
 
     return builder.build()

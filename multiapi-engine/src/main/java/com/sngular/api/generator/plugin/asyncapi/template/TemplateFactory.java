@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.sngular.api.generator.plugin.asyncapi.exception.NonSupportedBindingException;
+import com.sngular.api.generator.plugin.asyncapi.model.ChannelObject;
 import com.sngular.api.generator.plugin.asyncapi.model.MethodObject;
 import com.sngular.api.generator.plugin.asyncapi.parameter.SpecFile;
 import com.sngular.api.generator.plugin.asyncapi.util.BindingTypeEnum;
@@ -43,6 +44,8 @@ public class TemplateFactory extends CommonTemplateFactory {
 
   private final List<MethodObject> streamBridgeMethods = new ArrayList<>();
 
+  private final List<ChannelObject> channels = new ArrayList<>();
+
   private String subscribeFilePath = null;
 
   private String supplierFilePath = null;
@@ -55,6 +58,10 @@ public class TemplateFactory extends CommonTemplateFactory {
 
   private String subscribeClassName = null;
 
+  private boolean generateModelOnly = false;
+
+  private boolean generateSpringwolfAnnotations = false;
+
   public TemplateFactory(
       boolean enableOverwrite,
       final File targetFolder,
@@ -64,9 +71,21 @@ public class TemplateFactory extends CommonTemplateFactory {
   }
 
   public final void fillTemplates() throws IOException {
+    if (generateModelOnly) {
+      generateTemplates();
+      cleanData();
+      return;
+    }
+
     addToRoot("publishMethods", publishMethods);
     addToRoot("subscribeMethods", subscribeMethods);
     addToRoot("streamBridgeMethods", streamBridgeMethods);
+
+    if (!channels.isEmpty() && Objects.nonNull(subscribeFilePath)) {
+      addToRoot("channels", channels);
+      fillTemplate(subscribeFilePath, "Channels", TemplateIndexConstants.TEMPLATE_API_CHANNELS);
+      delFromRoot("channels");
+    }
 
     for (final var method : publishMethods) {
       fillTemplate(supplierFilePath, supplierClassName, checkTemplate(method.getBindingType(), TemplateIndexConstants.TEMPLATE_API_SUPPLIERS));
@@ -89,7 +108,13 @@ public class TemplateFactory extends CommonTemplateFactory {
     final String templateName;
     switch (BindingTypeEnum.valueOf(bindingType)) {
       case NONBINDING:
-        templateName = defaultTemplate;
+        if (generateSpringwolfAnnotations && Objects.equals(defaultTemplate, TemplateIndexConstants.TEMPLATE_API_SUPPLIERS)) {
+          templateName = TemplateIndexConstants.TEMPLATE_API_SUPPLIERS_SPRINGWOLF;
+        } else if (generateSpringwolfAnnotations && Objects.equals(defaultTemplate, TemplateIndexConstants.TEMPLATE_API_CONSUMERS)) {
+          templateName = TemplateIndexConstants.TEMPLATE_API_CONSUMERS_SPRINGWOLF;
+        } else {
+          templateName = defaultTemplate;
+        }
         break;
       case KAFKA:
         templateName = StringUtils.remove(defaultTemplate, ".ftlh") + TemplateIndexConstants.KAFKA_BINDINGS_FTLH;
@@ -116,6 +141,15 @@ public class TemplateFactory extends CommonTemplateFactory {
       }
     }
     cleanData();
+  }
+
+  public final void setGenerateModelOnly(final boolean generateModelOnly) {
+    this.generateModelOnly = generateModelOnly;
+  }
+
+  public final void setGenerateSpringwolfAnnotations(final boolean generateSpringwolfAnnotations) {
+    this.generateSpringwolfAnnotations = generateSpringwolfAnnotations;
+    addToRoot("generateSpringwolfAnnotations", generateSpringwolfAnnotations);
   }
 
   public final void setSubscribePackageName(final String packageName) {
@@ -149,12 +183,13 @@ public class TemplateFactory extends CommonTemplateFactory {
     this.streamBridgeClassName = className;
   }
 
-  public final void addSupplierMethod(final String operationId, final String classNamespace, final String bindings, final String bindingType) {
+  public final void addSupplierMethod(final String operationId, final String classNamespace, final String channelName, final String bindings, final String bindingType) {
     publishMethods.add(MethodObject
                            .builder()
                            .operationId(operationId)
                            .classNamespace(classNamespace)
                            .type("publish")
+                           .channelName(channelName)
                            .keyClassNamespace(bindings)
                            .bindingType(bindingType)
                            .build());
@@ -172,15 +207,24 @@ public class TemplateFactory extends CommonTemplateFactory {
                                 .build());
   }
 
-  public final void addSubscribeMethod(final String operationId, final String classNamespace, final String bindings, final String bindingType) {
+  public final void addSubscribeMethod(final String operationId, final String classNamespace, final String channelName, final String bindings, final String bindingType) {
     subscribeMethods.add(MethodObject
                              .builder()
                              .operationId(operationId)
                              .classNamespace(classNamespace)
                              .type("subscribe")
+                             .channelName(channelName)
                              .keyClassNamespace(bindings)
                              .bindingType(bindingType)
                              .build());
+  }
+
+  public final void addChannel(final String operationId, final String channelName) {
+    channels.add(ChannelObject
+                     .builder()
+                     .operationId(operationId)
+                     .channelName(channelName)
+                     .build());
   }
 
   public final void setSupplierEntitiesSuffix(final String suffix) {
@@ -203,11 +247,25 @@ public class TemplateFactory extends CommonTemplateFactory {
     }
   }
 
+  public final void calculateJacksonPackage(final Integer springBootVersion) {
+    // Spring Boot 4 (Spring Framework 7) ships Jackson 3, which relocated its databind/core
+    // packages from com.fasterxml.jackson to tools.jackson. Jackson annotations keep the old
+    // coordinates, so only the databind package is switched here.
+    if (4 <= springBootVersion) {
+      addToRoot("jacksonPackage", "tools.jackson");
+      addToRoot("isJackson3", Boolean.TRUE);
+    } else {
+      addToRoot("jacksonPackage", "com.fasterxml.jackson");
+      addToRoot("isJackson3", Boolean.FALSE);
+    }
+  }
+
   public final void clearData() {
     cleanData();
     publishMethods.clear();
     subscribeMethods.clear();
     streamBridgeMethods.clear();
+    channels.clear();
   }
 
   @Override
@@ -218,6 +276,7 @@ public class TemplateFactory extends CommonTemplateFactory {
     delFromRoot("publishMethods");
     delFromRoot("subscribeMethods");
     delFromRoot("streamBridgeMethods");
+    delFromRoot("channels");
   }
 
   public final void fillTemplateWrapper(

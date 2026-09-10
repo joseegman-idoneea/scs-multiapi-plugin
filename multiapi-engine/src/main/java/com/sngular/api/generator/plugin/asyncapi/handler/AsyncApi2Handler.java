@@ -72,6 +72,9 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
           final Map.Entry<String, JsonNode> entry = channelListIt.next();
           final JsonNode channel = entry.getValue();
           final String operationId = getOperationId(channel);
+          if (Objects.nonNull(fileParameter.getConsumer()) && entry.getKey().contains("{")) {
+            templateFactory.addChannel(operationId, entry.getKey());
+          }
           final JsonNode channelPayload = getChannelDefinition(channel);
           processOperation(fileParameter, ymlParent, entry, channel, operationId, channelPayload, totalSchemas);
         }
@@ -116,13 +119,13 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
       final var operationObject = fileParameter.getConsumer();
       operationObject.setFilePath(fileParameter.getFilePath());
       checkClassPackageDuplicate(operationObject.getClassNamePostfix(), operationObject.getApiPackage());
-      processSubscribeMethod(operationId, channelPayload, operationObject, ymlParent, totalSchemas);
+      processSubscribeMethod(operationId, channelPayload, operationObject, ymlParent, entry.getKey(), totalSchemas);
       addProcessedClassesAndPackagesToGlobalVariables(operationObject.getClassNamePostfix(), operationObject.getApiPackage(), CONSUMER_CLASS_NAME);
     } else if (isValidOperation(fileParameter.getSupplier(), operationId, channel, PUBLISH, Objects.isNull(fileParameter.getStreamBridge()))) {
       final var operationObject = fileParameter.getSupplier();
       operationObject.setFilePath(fileParameter.getFilePath());
       checkClassPackageDuplicate(operationObject.getClassNamePostfix(), operationObject.getApiPackage());
-      processSupplierMethod(operationId, channelPayload, operationObject, ymlParent, totalSchemas);
+      processSupplierMethod(operationId, channelPayload, operationObject, ymlParent, entry.getKey(), totalSchemas);
       addProcessedClassesAndPackagesToGlobalVariables(operationObject.getClassNamePostfix(), operationObject.getApiPackage(), SUPPLIER_CLASS_NAME);
     } else if (isValidOperation(fileParameter.getStreamBridge(), operationId, channel, PUBLISH, Objects.isNull(fileParameter.getSupplier()))) {
       final var operationObject = fileParameter.getStreamBridge();
@@ -136,10 +139,10 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
   @Override
   protected void processSupplierMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException {
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException {
     final ProcessMethodResult result = processMethod(operationId, channel, operationObject, ymlParent, totalSchemas);
     fillTemplateFactory(operationId, result, totalSchemas, operationObject);
-    templateFactory.addSupplierMethod(result.getOperationId(), result.getNamespace(), result.getBindings(), result.getBindingType());
+    templateFactory.addSupplierMethod(result.getOperationId(), result.getNamespace(), channelName, result.getBindings(), result.getBindingType());
   }
 
   @Override
@@ -159,10 +162,10 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
   @Override
   protected void processSubscribeMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException {
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException {
     final ProcessMethodResult result = processMethod(operationId, channel, operationObject, ymlParent, totalSchemas);
     fillTemplateFactory(operationId, result, totalSchemas, operationObject);
-    templateFactory.addSubscribeMethod(result.getOperationId(), result.getNamespace(), result.getBindings(), result.getBindingType());
+    templateFactory.addSubscribeMethod(result.getOperationId(), result.getNamespace(), channelName, result.getBindings(), result.getBindingType());
   }
 
   @Override
@@ -182,12 +185,12 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
           MapperContentUtil.mapComponentToSchemaObject(totalSchemas, className, schemaToBuild, parentPackage, operationObject, this.baseDir).iterator();
 
       if (schemaObjectIt.hasNext()) {
-        writeSchemaObject(operationObject.isUseLombokModelAnnotation(), operationObject.getModelPackage(), keyClassName, schemaObjectIt.next());
+        writeSchemaObject(operationObject.isUseLombokModelAnnotation(), operationObject.isUsePactAnnotation(), operationObject.getModelPackage(), keyClassName, schemaObjectIt.next());
         if (Objects.nonNull(keyClassName)) {
           templateFactory.setWrapperPackageName(operationObject.getApiPackage());
           templateFactory.fillTemplateWrapper(operationObject.getApiPackage(), classFullName, className, keyClassFullName, keyClassName);
         }
-        schemaObjectIt.forEachRemaining(schemaObj -> writeSchemaObject(operationObject.isUseLombokModelAnnotation(), operationObject.getModelPackage(), null, schemaObj));
+        schemaObjectIt.forEachRemaining(schemaObj -> writeSchemaObject(operationObject.isUseLombokModelAnnotation(), operationObject.isUsePactAnnotation(), operationObject.getModelPackage(), null, schemaObj));
       }
     }
   }

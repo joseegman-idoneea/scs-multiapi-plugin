@@ -28,6 +28,10 @@ public class CommonSpecFile {
 
   private boolean useLombokModelAnnotation;
 
+  private boolean generateSpringwolfAnnotations;
+
+  private boolean usePactAnnotation;
+
   @Builder.Default
   private String dateTimeFormat = "yyyy-MM-dd'T'HH:mm:ss";
 

@@ -187,6 +187,8 @@ public final class ModelBuilder {
       final var refSchema = totalSchemas.get(MapperUtil.getRefSchemaKey(schema));
       ApiTool.getProperties(refSchema).forEachRemaining(processProperties(buildingSchema, totalSchemas, compositedSchemas, fieldObjectArrayList, specFile, refSchema, antiLoopList,
                                                                           baseDir));
+    } else if (ApiTool.isInlineObject(schema)) {
+      schema.fields().forEachRemaining(processProperties(nameSchema, totalSchemas, compositedSchemas, fieldObjectArrayList, specFile, schema, antiLoopList, baseDir));
     } else {
       fieldObjectArrayList.add(SchemaFieldObject.builder()
                                                 .baseName(ApiTool.getName(schema))
@@ -736,6 +738,11 @@ public final class ModelBuilder {
       if (ApiTool.hasRef(ref)) {
         final var schemaToProcess = totalSchemas.get(MapperUtil.getRefSchemaKey(ref));
         ApiTool.getProperties(schemaToProcess).forEachRemaining(processProperties("", totalSchemas, compositedSchemas, fieldObjectArrayList, specFile, ref, antiLoopList, baseDir));
+        for (var fieldObject : fieldObjectArrayList) {
+          fieldObject.setRequired(true);
+        }
+      } else if (ApiTool.hasProperties(ref)) {
+        ApiTool.getProperties(ref).forEachRemaining(processProperties("", totalSchemas, compositedSchemas, fieldObjectArrayList, specFile, ref, antiLoopList, baseDir));
         for (var fieldObject : fieldObjectArrayList) {
           fieldObject.setRequired(true);
         }
