@@ -22,8 +22,9 @@ public class ClasspathTemplateLoader extends CommonTemplateLoader {
       "interfaceConsumer.ftlh", "interfaceConsumerWithKafkaBindings.ftlh",
       "interfaceSupplier.ftlh", "interfaceSupplierWithKafkaBindings.ftlh",
       "templateChannels.ftlh", "templateConsumers.ftlh", "templateConsumersWithKafkaBindings.ftlh",
-      "templateMessageWrapper.ftlh", "templateStreamBridge.ftlh", "templateStreamBridgeWithKafkaBindings.ftlh",
-      "templateSuppliers.ftlh", "templateSuppliersWithKafkaBindings.ftlh");
+      "templateConsumersWithSpringwolf.ftlh", "templateMessageWrapper.ftlh", "templateStreamBridge.ftlh",
+      "templateStreamBridgeWithKafkaBindings.ftlh", "templateSuppliers.ftlh",
+      "templateSuppliersWithKafkaBindings.ftlh", "templateSuppliersWithSpringwolf.ftlh");
 
   public ClasspathTemplateLoader() {
     super();

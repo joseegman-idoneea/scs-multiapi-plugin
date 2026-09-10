@@ -60,6 +60,8 @@ public class TemplateFactory extends CommonTemplateFactory {
 
   private boolean generateModelOnly = false;
 
+  private boolean generateSpringwolfAnnotations = false;
+
   public TemplateFactory(
       boolean enableOverwrite,
       final File targetFolder,
@@ -106,7 +108,13 @@ public class TemplateFactory extends CommonTemplateFactory {
     final String templateName;
     switch (BindingTypeEnum.valueOf(bindingType)) {
       case NONBINDING:
-        templateName = defaultTemplate;
+        if (generateSpringwolfAnnotations && Objects.equals(defaultTemplate, TemplateIndexConstants.TEMPLATE_API_SUPPLIERS)) {
+          templateName = TemplateIndexConstants.TEMPLATE_API_SUPPLIERS_SPRINGWOLF;
+        } else if (generateSpringwolfAnnotations && Objects.equals(defaultTemplate, TemplateIndexConstants.TEMPLATE_API_CONSUMERS)) {
+          templateName = TemplateIndexConstants.TEMPLATE_API_CONSUMERS_SPRINGWOLF;
+        } else {
+          templateName = defaultTemplate;
+        }
         break;
       case KAFKA:
         templateName = StringUtils.remove(defaultTemplate, ".ftlh") + TemplateIndexConstants.KAFKA_BINDINGS_FTLH;
@@ -137,6 +145,11 @@ public class TemplateFactory extends CommonTemplateFactory {
 
   public final void setGenerateModelOnly(final boolean generateModelOnly) {
     this.generateModelOnly = generateModelOnly;
+  }
+
+  public final void setGenerateSpringwolfAnnotations(final boolean generateSpringwolfAnnotations) {
+    this.generateSpringwolfAnnotations = generateSpringwolfAnnotations;
+    addToRoot("generateSpringwolfAnnotations", generateSpringwolfAnnotations);
   }
 
   public final void setSubscribePackageName(final String packageName) {
@@ -170,12 +183,13 @@ public class TemplateFactory extends CommonTemplateFactory {
     this.streamBridgeClassName = className;
   }
 
-  public final void addSupplierMethod(final String operationId, final String classNamespace, final String bindings, final String bindingType) {
+  public final void addSupplierMethod(final String operationId, final String classNamespace, final String channelName, final String bindings, final String bindingType) {
     publishMethods.add(MethodObject
                            .builder()
                            .operationId(operationId)
                            .classNamespace(classNamespace)
                            .type("publish")
+                           .channelName(channelName)
                            .keyClassNamespace(bindings)
                            .bindingType(bindingType)
                            .build());
@@ -193,12 +207,13 @@ public class TemplateFactory extends CommonTemplateFactory {
                                 .build());
   }
 
-  public final void addSubscribeMethod(final String operationId, final String classNamespace, final String bindings, final String bindingType) {
+  public final void addSubscribeMethod(final String operationId, final String classNamespace, final String channelName, final String bindings, final String bindingType) {
     subscribeMethods.add(MethodObject
                              .builder()
                              .operationId(operationId)
                              .classNamespace(classNamespace)
                              .type("subscribe")
+                             .channelName(channelName)
                              .keyClassNamespace(bindings)
                              .bindingType(bindingType)
                              .build());

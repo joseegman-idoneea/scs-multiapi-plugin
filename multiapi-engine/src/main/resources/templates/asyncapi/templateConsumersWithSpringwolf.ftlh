@@ -1,0 +1,35 @@
+package ${subscribePackage};
+
+import java.util.function.Consumer;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncListener;
+import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncOperation;
+<#list subscribeMethods as method>
+import ${method.classNamespace}.${method.className}<#if subscribeEntitiesSuffix?has_content>${subscribeEntitiesSuffix}</#if>;
+</#list>
+
+@Configuration
+public class ${subscribeClassName?cap_first} {
+
+  <#list subscribeMethods as method>
+  private final I${method.operationId?cap_first} ${method.operationId?uncap_first};
+
+  </#list>
+  protected ${subscribeClassName?cap_first}(<#list subscribeMethods as method>final I${method.operationId?cap_first} ${method.operationId?uncap_first}<#sep>, </#list>) {
+    <#list subscribeMethods as method>
+    this.${method.operationId?uncap_first} = ${method.operationId?uncap_first};
+    </#list>
+  }
+
+  <#list subscribeMethods as method>
+  @Bean
+  @AsyncListener(operation = @AsyncOperation(channelName = "${method.channelName}", operationId = "${method.operationId}"))
+  public Consumer<${method.className}<#if subscribeEntitiesSuffix?has_content>${subscribeEntitiesSuffix}</#if>> ${method.operationId?uncap_first}() {
+    return value -> ${method.operationId?uncap_first}.${method.operationId?uncap_first}(value);
+  }
+
+  </#list>
+
+}
