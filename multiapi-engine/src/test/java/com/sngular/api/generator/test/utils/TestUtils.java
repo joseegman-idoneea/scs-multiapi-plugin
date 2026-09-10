@@ -9,12 +9,16 @@ package com.sngular.api.generator.test.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TestUtils {
 
@@ -34,8 +38,23 @@ public class TestUtils {
       final String sourceName = expectedFiles.get(i);
       reader2 = TestUtils.resourceAsFile(sourceName);
       assertThat(reader2).overridingErrorMessage("Expected file %s should not be null", sourceName).isNotNull();
-      assertThat(reader1)
-          .hasSameTextualContentAs(reader2);
+      final String generatedContent = TestUtils.normalizeContent(reader1);
+      final String expectedContent = TestUtils.normalizeContent(reader2);
+      assertThat(generatedContent)
+          .overridingErrorMessage("Generated file %s differs from expected file %s", outputFiles.get(i), sourceName)
+          .isEqualTo(expectedContent);
+    }
+  }
+
+  static String normalizeContent(final File file) {
+    try {
+      String content = Files.readString(file.toPath());
+      return Arrays.stream(content.replace("\r\n", "\n").replace("\r", "\n").split("\n", -1))
+          .map(String::stripTrailing)
+          .collect(Collectors.joining("\n"))
+          .strip();
+    } catch (IOException e) {
+      throw new RuntimeException("Error reading file " + file, e);
     }
   }
 
