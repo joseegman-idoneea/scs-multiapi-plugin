@@ -360,6 +360,11 @@ can be configured in the plugin.
       The default value are `yyyy-MM-dd'T'HH:mm:ss`.
   -  **useTimeType**: Enum TimeType value. Controls the types used when generating dates. Can be `LOCAL` or `ZOINED`.
       The default value is `TimeType.LOCAL`. 
+  -  **generateSpringwolfAnnotations**: Boolean value. When set to `true`, the generated
+      `Subscriber` and `Producer` bean methods are annotated with Springwolf's
+      `@AsyncListener` / `@AsyncPublisher` (with the channel name and `operationId`).
+      **It's initialized to `false` by default**. Only applies to `consumer` and `supplier`
+      sections (not `streamBridge`), and not in combination with Kafka bindings.
 
 The configuration of `consumer`, `supplier` and `streamBridge` are independent.
 If only one of them is configured in the pom file, only that one will be

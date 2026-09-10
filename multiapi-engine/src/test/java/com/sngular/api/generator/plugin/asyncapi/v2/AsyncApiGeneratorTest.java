@@ -99,6 +99,31 @@ class AsyncApiGeneratorTest {
   }
 
   @Test
+  void testGenerateSpringwolfAnnotations() throws IOException {
+    asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATE_SPRINGWOLF);
+
+    final Path target = Path.of(baseDir.toString(), "target", "generated/com/sngular/scsplugin/springwolf/model/event");
+
+    final Path subscriber = target.resolve("consumer/Subscriber.java");
+    final Path producer = target.resolve("producer/Producer.java");
+
+    Assertions.assertThat(subscriber).exists();
+    Assertions.assertThat(producer).exists();
+
+    final String subscriberContent = Files.readString(subscriber);
+    Assertions.assertThat(subscriberContent)
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncListener;")
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncOperation;")
+        .contains("@AsyncListener(operation = @AsyncOperation(channelName = \"order.created\", operationId = \"publishOperationFileGeneration\"))");
+
+    final String producerContent = Files.readString(producer);
+    Assertions.assertThat(producerContent)
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncPublisher;")
+        .contains("import io.github.stavshamir.springwolf.asyncapi.annotations.AsyncOperation;")
+        .contains("@AsyncPublisher(operation = @AsyncOperation(channelName = \"order.createCommand\", operationId = \"subscribeOperationFileGeneration\"))");
+  }
+
+  @Test
   void testExceptionForTestGenerationWithNoOperationId() {
     Assertions.assertThatThrownBy(() -> asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATION_WITH_NO_OPERATION_ID)).isInstanceOf(InvalidAPIException.class);
   }

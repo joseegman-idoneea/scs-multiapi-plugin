@@ -165,7 +165,7 @@ public abstract class BaseAsyncApiHandler {
 
   protected abstract void processSupplierMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
 
   protected abstract void processStreamBridgeMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent, final String channelName,
@@ -174,7 +174,7 @@ public abstract class BaseAsyncApiHandler {
 
   protected abstract void processSubscribeMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException, TemplateException;
 
   protected abstract void fillTemplateFactory(
       final String operationId,
@@ -216,6 +216,12 @@ public abstract class BaseAsyncApiHandler {
     processEntitiesSuffix(fileParameter);
     processJavaEEPackage(springBootVersion);
     templateFactory.setGenerateModelOnly(fileParameter.isGenerateModelOnly());
+    templateFactory.setGenerateSpringwolfAnnotations(
+        isSpringwolf(fileParameter.getSupplier()) || isSpringwolf(fileParameter.getConsumer()) || isSpringwolf(fileParameter.getStreamBridge()));
+  }
+
+  private boolean isSpringwolf(final OperationParameterObject operation) {
+    return Objects.nonNull(operation) && operation.isGenerateSpringwolfAnnotations();
   }
 
   protected void processPackage(final SpecFile fileParameter) {
