@@ -84,7 +84,9 @@ class AsyncApiGeneratorTest {
         Arguments.of("TestSubObjectSameName", AsyncApiGeneratorFixtures.TEST_SUB_OBJECT_SAME_NAME,
             AsyncApiGeneratorFixtures.validateTestSubObjectSameName()),
         Arguments.of("TestReferenceFromLocalIssue", AsyncApiGeneratorFixtures.TEST_REFERENCE_FROM_LOCAL_ISSUE,
-            AsyncApiGeneratorFixtures.validateTestReferenceFromLocalIssue()));
+            AsyncApiGeneratorFixtures.validateTestReferenceFromLocalIssue()),
+        Arguments.of("TestIssue292Streetlights", AsyncApiGeneratorFixtures.TEST_ISSUE_292_STREETLIGHTS,
+            AsyncApiGeneratorFixtures.validateTestIssue292Streetlights()));
   }
 
   @ParameterizedTest(name = "Test {index} - Process File Spec for case {0}")
