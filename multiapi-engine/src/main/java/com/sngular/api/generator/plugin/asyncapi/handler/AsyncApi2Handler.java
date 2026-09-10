@@ -119,13 +119,13 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
       final var operationObject = fileParameter.getConsumer();
       operationObject.setFilePath(fileParameter.getFilePath());
       checkClassPackageDuplicate(operationObject.getClassNamePostfix(), operationObject.getApiPackage());
-      processSubscribeMethod(operationId, channelPayload, operationObject, ymlParent, totalSchemas);
+      processSubscribeMethod(operationId, channelPayload, operationObject, ymlParent, entry.getKey(), totalSchemas);
       addProcessedClassesAndPackagesToGlobalVariables(operationObject.getClassNamePostfix(), operationObject.getApiPackage(), CONSUMER_CLASS_NAME);
     } else if (isValidOperation(fileParameter.getSupplier(), operationId, channel, PUBLISH, Objects.isNull(fileParameter.getStreamBridge()))) {
       final var operationObject = fileParameter.getSupplier();
       operationObject.setFilePath(fileParameter.getFilePath());
       checkClassPackageDuplicate(operationObject.getClassNamePostfix(), operationObject.getApiPackage());
-      processSupplierMethod(operationId, channelPayload, operationObject, ymlParent, totalSchemas);
+      processSupplierMethod(operationId, channelPayload, operationObject, ymlParent, entry.getKey(), totalSchemas);
       addProcessedClassesAndPackagesToGlobalVariables(operationObject.getClassNamePostfix(), operationObject.getApiPackage(), SUPPLIER_CLASS_NAME);
     } else if (isValidOperation(fileParameter.getStreamBridge(), operationId, channel, PUBLISH, Objects.isNull(fileParameter.getSupplier()))) {
       final var operationObject = fileParameter.getStreamBridge();
@@ -139,10 +139,10 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
   @Override
   protected void processSupplierMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException {
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException {
     final ProcessMethodResult result = processMethod(operationId, channel, operationObject, ymlParent, totalSchemas);
     fillTemplateFactory(operationId, result, totalSchemas, operationObject);
-    templateFactory.addSupplierMethod(result.getOperationId(), result.getNamespace(), result.getBindings(), result.getBindingType());
+    templateFactory.addSupplierMethod(result.getOperationId(), result.getNamespace(), channelName, result.getBindings(), result.getBindingType());
   }
 
   @Override
@@ -162,10 +162,10 @@ public class AsyncApi2Handler extends BaseAsyncApiHandler {
   @Override
   protected void processSubscribeMethod(
       final String operationId, final JsonNode channel, final OperationParameterObject operationObject, final FileLocation ymlParent,
-      final Map<String, JsonNode> totalSchemas) throws IOException {
+      final String channelName, final Map<String, JsonNode> totalSchemas) throws IOException {
     final ProcessMethodResult result = processMethod(operationId, channel, operationObject, ymlParent, totalSchemas);
     fillTemplateFactory(operationId, result, totalSchemas, operationObject);
-    templateFactory.addSubscribeMethod(result.getOperationId(), result.getNamespace(), result.getBindings(), result.getBindingType());
+    templateFactory.addSubscribeMethod(result.getOperationId(), result.getNamespace(), channelName, result.getBindings(), result.getBindingType());
   }
 
   @Override

@@ -114,6 +114,9 @@ abstract class AsyncApiTask extends DefaultTask {
     if (parameterObject.getUseLombokModelAnnotation()) {
       builder.useLombokModelAnnotation(parameterObject.useLombokModelAnnotation)
     }
+    if (parameterObject.getGenerateSpringwolfAnnotations()) {
+      builder.generateSpringwolfAnnotations(parameterObject.generateSpringwolfAnnotations)
+    }
 
     return builder.build()
   }
