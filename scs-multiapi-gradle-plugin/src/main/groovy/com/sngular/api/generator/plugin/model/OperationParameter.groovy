@@ -30,7 +30,9 @@ class OperationParameter {
 
   boolean useLombokModelAnnotation
 
-  boolean generateSpringwolfAnnotations
+boolean generateSpringwolfAnnotations
+
+  boolean usePactAnnotation
 
   String getIds() {
     return ids
@@ -122,6 +124,14 @@ class OperationParameter {
 
   void setGenerateSpringwolfAnnotations(final boolean generateSpringwolfAnnotations) {
     this.generateSpringwolfAnnotations = generateSpringwolfAnnotations
+  }
+
+  boolean getUsePactAnnotation() {
+    return usePactAnnotation
+  }
+
+  void setUsePactAnnotation(final boolean usePactAnnotation) {
+    this.usePactAnnotation = usePactAnnotation
   }
 
 }
