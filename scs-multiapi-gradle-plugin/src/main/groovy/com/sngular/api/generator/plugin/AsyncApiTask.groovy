@@ -76,6 +76,7 @@ abstract class AsyncApiTask extends DefaultTask {
     if (apiSpecFile.supplier) {
       builder.supplier(toOperationParameterObject(apiSpecFile.supplier))
     }
+    builder.generateModelOnly(Boolean.TRUE.equals(apiSpecFile.getGenerateModelOnly()))
 
     return builder.build()
   }

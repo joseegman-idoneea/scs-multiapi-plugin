@@ -43,6 +43,27 @@ public class AsyncApiGeneratorFixtures {
           .build()
   );
 
+  static final List<SpecFile> TEST_GENERATE_MODEL_ONLY = List.of(
+      SpecFile
+          .builder()
+          .filePath("asyncapigenerator/v2/testFileGeneration/event-api.yml")
+          .generateModelOnly(true)
+          .consumer(OperationParameterObject.builder()
+              .ids("publishOperationFileGeneration")
+              .classNamePostfix("TestClassName")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.modelonly.model.event.consumer")
+              .modelPackage("com.sngular.scsplugin.modelonly.model.event")
+              .build())
+          .supplier(OperationParameterObject.builder()
+              .ids("subscribeOperationFileGeneration")
+              .modelNameSuffix("DTO")
+              .apiPackage("com.sngular.scsplugin.modelonly.model.event.producer")
+              .modelPackage("com.sngular.scsplugin.modelonly.model.event")
+              .build())
+          .build()
+  );
+
   static final List<SpecFile> TEST_FILE_GENERATION_NO_CONFIG = List.of(
       SpecFile
           .builder()

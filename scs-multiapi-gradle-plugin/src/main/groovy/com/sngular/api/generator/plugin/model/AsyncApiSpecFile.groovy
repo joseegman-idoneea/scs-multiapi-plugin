@@ -19,12 +19,22 @@ class AsyncApiSpecFile {
 
   OperationParameter streamBridge = new OperationParameter()
 
+  Boolean generateModelOnly = false
+
   void setFilePath(final String filePath) {
     this.filePath = filePath
   }
 
   String getFilePath() {
     return filePath
+  }
+
+  Boolean getGenerateModelOnly() {
+    return generateModelOnly
+  }
+
+  void setGenerateModelOnly(final Boolean generateModelOnly) {
+    this.generateModelOnly = generateModelOnly
   }
 
   OperationParameter getSupplier() {

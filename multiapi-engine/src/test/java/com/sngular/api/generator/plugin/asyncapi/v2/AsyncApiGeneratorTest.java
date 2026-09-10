@@ -7,6 +7,8 @@
 package com.sngular.api.generator.plugin.asyncapi.v2;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Function;
@@ -95,6 +97,36 @@ class AsyncApiGeneratorTest {
   @Test
   void testExceptionForTestGenerationWithNoOperationId() {
     Assertions.assertThatThrownBy(() -> asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATION_WITH_NO_OPERATION_ID)).isInstanceOf(InvalidAPIException.class);
+  }
+
+  @Test
+  void testGenerateModelOnly() throws IOException {
+    asyncApiGenerator.processFileSpec(AsyncApiGeneratorFixtures.TEST_GENERATE_MODEL_ONLY);
+
+    final Path target = Path.of(baseDir.toString(), "target");
+    final Path modelFolder = target.resolve("generated/com/sngular/scsplugin/modelonly/model/event");
+    final Path consumerApiFolder = target.resolve("generated/com/sngular/scsplugin/modelonly/model/event/consumer");
+    final Path producerApiFolder = target.resolve("generated/com/sngular/scsplugin/modelonly/model/event/producer");
+
+    Assertions.assertThat(modelFolder).isNotEmptyDirectory();
+    Assertions.assertThat(modelFolder.resolve("OrderDTO.java")).exists();
+    Assertions.assertThat(modelFolder.resolve("OrderLineDTO.java")).exists();
+    Assertions.assertThat(modelFolder.resolve("OrderProductDTO.java")).exists();
+    Assertions.assertThat(modelFolder.resolve("WaiterDTO.java")).exists();
+
+    Assertions.assertThat(consumerApiFolder).isDirectory();
+    Assertions.assertThat(consumerApiFolder).isEmptyDirectory();
+    Assertions.assertThat(producerApiFolder).isDirectory();
+    Assertions.assertThat(producerApiFolder).isEmptyDirectory();
+
+    final Path modelOnlyTree = target.resolve("generated/com/sngular/scsplugin/modelonly");
+    try (Stream<Path> files = Files.walk(modelOnlyTree)) {
+      Assertions.assertThat(files.map(Path::getFileName).map(Path::toString))
+          .noneMatch(name -> name.startsWith("I") && name.endsWith(".java"))
+          .noneMatch("Channels.java"::equals)
+          .noneMatch("Subscriber.java"::equals)
+          .noneMatch("Producer.java"::equals);
+    }
   }
 
   @Test
