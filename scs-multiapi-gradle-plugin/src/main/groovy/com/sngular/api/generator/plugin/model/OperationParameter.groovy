@@ -32,7 +32,7 @@ class OperationParameter {
 
   boolean generateSpringwolfAnnotations
 
-  boolean usePactAnnotation
+boolean usePactAnnotation
 
   String getIds() {
     return ids
@@ -126,7 +126,7 @@ class OperationParameter {
     this.generateSpringwolfAnnotations = generateSpringwolfAnnotations
   }
 
-  boolean getUsePactAnnotation() {
+boolean getUsePactAnnotation() {
     return usePactAnnotation
   }
 
@@ -135,4 +135,3 @@ class OperationParameter {
   }
 
 }
-
